@@ -16,7 +16,6 @@ public class BotService {
         this.gameState = new GameState();
     }
 
-
     public GameObject getBot() {
         return this.bot;
     }
@@ -34,17 +33,44 @@ public class BotService {
     }
 
     public void computeNextPlayerAction(PlayerAction playerAction) {
-        playerAction.action = PlayerActions.FORWARD;
-        playerAction.heading = new Random().nextInt(360);
+        List<GameObject> gameObjects = gameState.getGameObjects();
+        List<GameObject> players = gameState.getPlayerGameObjects();
+        List<GameObject> opponents;
 
-        if (!gameState.getGameObjects().isEmpty()) {
-            var foodList = gameState.getGameObjects()
-                    .stream().filter(item -> item.getGameObjectType() == ObjectTypes.FOOD)
-                    .sorted(Comparator
-                            .comparing(item -> getDistanceBetween(bot, item)))
-                    .collect(Collectors.toList());
+        // filter opponents from players
+        if (!players.isEmpty()) {
+            opponents = players;
+            opponents.removeIf(x -> x.getId() == bot.getId());
 
-            playerAction.heading = getHeadingBetween(foodList.get(0));
+            // Strat 1
+            // playerAction.action = PlayerActions.FORWARD;
+            // playerAction.heading = new Random().nextInt(360);
+
+            if (!gameState.getGameObjects().isEmpty()) {
+                // check nearest food
+                List<GameObject> foodList = gameObjects.stream()
+                        .filter(item -> item.getGameObjectType() == ObjectTypes.FOOD)
+                        .sorted(Comparator
+                                .comparing(item -> getDistanceBetween(bot, item)))
+                        .collect(Collectors.toList());
+
+                // compare
+                for (GameObject food : foodList) {
+                    for (GameObject opponent : opponents) {
+                        double distToFood = getDistanceBetween(bot, food);
+                        double distToOpp = getDistanceBetween(bot, opponent);
+
+                        if (distToFood < distToOpp) {
+                            playerAction.action = PlayerActions.FORWARD;
+                            playerAction.heading = getHeadingBetween(food);
+                            break;
+                        }
+
+                    }
+                }
+
+            }
+
         }
 
         this.playerAction = playerAction;
@@ -60,14 +86,19 @@ public class BotService {
     }
 
     private void updateSelfState() {
-        Optional<GameObject> optionalBot = gameState.getPlayerGameObjects().stream().filter(gameObject -> gameObject.id.equals(bot.id)).findAny();
+        Optional<GameObject> optionalBot = gameState.getPlayerGameObjects().stream()
+                .filter(gameObject -> gameObject.id.equals(bot.id)).findAny();
         optionalBot.ifPresent(bot -> this.bot = bot);
     }
 
     private double getDistanceBetween(GameObject object1, GameObject object2) {
         var triangleX = Math.abs(object1.getPosition().x - object2.getPosition().x);
         var triangleY = Math.abs(object1.getPosition().y - object2.getPosition().y);
-        return Math.sqrt(triangleX * triangleX + triangleY * triangleY);
+        var res = Math.sqrt(triangleX * triangleX + triangleY * triangleY);
+        if (object1.gameObjectType == ObjectTypes.PLAYER && object2.gameObjectType == ObjectTypes.PLAYER) {
+            res -= (object1.size + object2.size);
+        }
+        return res;
     }
 
     private int getHeadingBetween(GameObject otherObject) {
@@ -79,6 +110,5 @@ public class BotService {
     private int toDegrees(double v) {
         return (int) (v * (180 / Math.PI));
     }
-
 
 }
