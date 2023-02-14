@@ -154,177 +154,146 @@ public class BotService extends CheckEffect{
                     }
                 }
 
-                // // check nearest torpedo
-                // if (torpedoList.size() > 0) {
-                //     if (getDistanceBetween(bot, torpedoList.get(0)) < bot.getSize() + 80) {
-                //         int headingToTorpedo = getHeadingBetween(torpedoList.get(0));
-                //         DegreeRange toAdd = new DegreeRange(headingToTorpedo + 30,headingToTorpedo - 30);
-                //         headingRestriction.add(toAdd);
-                //         System.out.println("BOT IS NEAR TORPEDO");
-                //     } else {
-                //         System.out.println("ENEMY TORPEDO CHECK OK");
-                //     }
-                // }
-
-
-
-                /* *** OPPONENT CHECKS AND STRATEGY/COMMAND SELECTION *** */
-                double distanceToOpp = getOuterDistanceBetween(bot, opponents.get(0));
-                // double distanceToTor;
-                // if (torpedoList.size() > 0) {
-                //     distanceToTor = getOuterDistanceBetween(bot, torpedoList.get(0));
-                // } else {
-                //     distanceToTor = 2 * worldRadius;
-                // }
-                int headingToOpp = getHeadingBetween(opponents.get(0));
-                boolean oppInRange = isHeadingUnrestricted(headingToOpp, headingRestriction);
-                /*
-                 * if (near torp or near enemy) {
-                 * if near enemy try attack
-                 * if near torpedo try defence
-                 * } else {
-                 * gather food
-                 * }
-                 */
-                System.out.println("HAS TORPEDO : " + bot.hasTorpedo());
-                if (distanceToOpp < 100) {        /* COMBAT MODE */
-                    boolean hasChosenStrat = false;
-                    System.out.println("COMBAT MODE");
-                    System.out.println("WEAPON LOG:");
-                    if (!hasChosenStrat && bot.hasTorpedo() && oppInRange && bot.getSize() > 10) {  /* try torpedo */
-                        System.out.println("TORPEDO FIRED");
-                        playerAction.heading = headingToOpp;
-                        playerAction.action = PlayerActions.FIRETORPEDOES;
-                        hasChosenStrat = true;
-                    }
-                    if (!hasChosenStrat && (bot.getSize() - (distanceToOpp/bot.getSpeed()) > opponents.get(0).getSize())){  /* try afterburner charge */
-                        playerAction.heading = headingToOpp;
-                        if (!isAfterburner(bot.effects) && bot.getSize() > 10) {
-                            playerAction.action = PlayerActions.STARTAFTERBURNER;
-                            System.out.println("START AFTERBURNER");
-                        } else {
-                            System.out.println("AFTERBURNER IS ACTIVE");
-                            playerAction.action = PlayerActions.FORWARD;
-                        }
-                        // playerAction.action = PlayerActions.FORWARD;
-                        hasChosenStrat = true;   
-                    }
-                    // if (!hasChosenStrat && bot.getSize() < opponents.get(0).getSize()) {    /* evade */
-                    //     System.out.println("EVADE OPPONENT");
-                    //     DegreeRange oppRange = new DegreeRange((int) (headingToOpp + distanceToOpp/opponents.get(0).getSize()), (int) (headingToOpp - distanceToOpp/opponents.get(0).getSize()));
-                    //     headingRestriction.add(oppRange);
-                    //     playerAction.heading = randValidHeading(headingRestriction);
-                    //     if (!isAfterburner(bot.effects) && bot.getSize() > 10) {
-                    //         playerAction.action = PlayerActions.STARTAFTERBURNER;
-                    //     } else {
-                    //         playerAction.action = PlayerActions.FORWARD;
-                    //     }
-                    //     hasChosenStrat = true;
-                    // }
-
-                    
-                } 
-                else {        /* SAFE MODE */
-                    System.out.println("SAFE MODE");
-
-                    // System.out.println("PASSED STOP AFTERBURNER CHECK");
-
-                    // restrict heading to opponents < 100
-                    for (GameObject opponent : opponents) {
-                        if (getOuterDistanceBetween(bot, opponent) < 100) {
-                            int headingToThisOpp = getHeadingBetween(opponent);
-                            int deltaHeading = (int) (opponent.getSize()/getDistanceBetween(opponent, bot));
-                            DegreeRange toAdd = new DegreeRange(headingToThisOpp+deltaHeading,headingToThisOpp-deltaHeading);
-                            System.out.println("HEADINGGGGG : "+headingToOpp);
-                            System.out.println("STARTTT: " + toAdd.getStartDegree() + " END : " + "STARTTT: " + toAdd.getEndDegree());
-                            headingRestriction.add(toAdd);
-                        }
-                    }
-                    System.out.println("OPPONENT HEADING CHECK DONE");
-
-                    int heading = -1;
-                    
-                    // check possible food
-                    int indexFood = -1;
-                    for (int i=0; i < foodList.size(); i++) {
-                        if (isHeadingUnrestricted(getHeadingBetween(foodList.get(i)), headingRestriction)){
-                            indexFood = i;
-                            break;
-                        }
-                    }
-                    // check possible superfood 
-                    int indexSuperFood = -1;
-                    if (!hasSuperfood(bot.effects)){
-                        for (int i=0; i < superFoodList.size(); i++) {
-                            if (isHeadingUnrestricted(getHeadingBetween(superFoodList.get(i)), headingRestriction)){
-                                indexSuperFood = i;
-                                break;
-                            }
-                        }
-                    }
-                    // check possible supernova charge 
-                    int indexNovaPickup = -1;
-                    for (int i=0; i < superNovaPickupList.size(); i++) {
-                        if (isHeadingUnrestricted(getHeadingBetween(superNovaPickupList.get(i)), headingRestriction)){
-                            System.out.println("SUPERNOVA PICKUP DETECTED");
-                            System.out.println("Pickup location : (" + superNovaPickupList.get(i).getPosition().getX() + "," + superNovaPickupList.get(i).getPosition().getY() + ")");
-                            indexNovaPickup = i;
-                            break;
-                        }
-                    }
-                                        
-                    // check whether goes to food or superfood or supernova pickup
-                    double distToFood = (indexFood != -1) ? getDistanceBetween(bot, foodList.get(indexFood)) : worldRadius * 2;
-                    double distToSFood = (indexSuperFood != -1) ? getDistanceBetween(bot, superFoodList.get(indexSuperFood)) : worldRadius * 2;
-                    double distToSNova = (indexNovaPickup != -1) ? getDistanceBetween(bot, superNovaPickupList.get(indexNovaPickup)) : worldRadius * 2;
-
-                    if (distToSFood/2 <= distToFood && distToSFood <= distToSNova && distToSFood < worldRadius * 2) {
-                        heading = getHeadingBetween(superFoodList.get(indexSuperFood));
-                        System.out.println("GO TO SUPERFOOD");
-                    } else if (distToSNova/2 <= distToFood && distToSNova <= distToSFood && distToSNova < worldRadius * 2) {
-                        heading = getHeadingBetween(superNovaPickupList.get(indexNovaPickup));
-                        System.out.println("GO TO SUPERNOVA PICKUP");
-                    } else if (distToFood <= distToSFood/2 && distToFood <= distToSNova/2 && distToFood < worldRadius * 2) {
-                        heading = getHeadingBetween(foodList.get(indexFood));
-                        System.out.println("GO TO FOOD");
-                    } else {
-                        heading = randValidHeading(headingRestriction);
-                        System.out.println("RANDOM");
-                    }
-
-                    playerAction.heading = heading;
-                    if (isAfterburner(bot.effects)){
-                        playerAction.action = PlayerActions.STOPAFTERBURNER;
-                        System.out.println("STOPPED AFTERBURNER");
-                    } else {
-                        playerAction.action = PlayerActions.FORWARD;
-                    }
-                }
-
-                /* DEFENCE CHECK (SHIELD) */
-                if (torpedoList.size() > 0){
-                    System.out.println("DEFENCE CHECK");
-                    double distanceToTor = getOuterDistanceBetween(bot, torpedoList.get(0));
-                    int torpedoHeading = torpedoList.get(0).currentHeading;
-                    System.out.println("TORPEDO HEADING : " + torpedoHeading);
-                    if (distanceToTor < 64 && heading_gap(headingToOpp, torpedoHeading) > 5 && bot.hasShield() && !isUsingShield(bot.effects) && bot.getSize() > 25) {
-                            playerAction.action = PlayerActions.ACTIVATESHIELD;
-                            System.out.println("SHIELD ACTIVATED");
-                    }
-                }
-                
-                /* FINAL CHECK */
+                /* DESTRUCTIVE AFTERBURNER CHECK */
                 System.out.println("DESTRUCTIVE AFTERBURNER CHECK");
                 if (isAfterburner(bot.effects) && bot.getSize()<25) {
                     playerAction.action = PlayerActions.STOPAFTERBURNER;
                     System.out.println("AFTERBURNER DISABLED");
                 } else {
                     System.out.println("OK");
-                }
-                // if (playerAction.action == PlayerActions.TELEPORT) {
-                //     bot.setActiveTeleHead(-1);
-                // }
 
+                    double distanceToOpp = getOuterDistanceBetween(bot, opponents.get(0));
+                    int headingToOpp = getHeadingBetween(opponents.get(0));
+                    boolean oppInRange = isHeadingUnrestricted(headingToOpp, headingRestriction);
+                    
+                    /* DEFENCE CHECK (SHIELD) */
+                    boolean defenceMode = false;
+                    if (torpedoList.size() > 0){
+                        System.out.println("DEFENCE CHECK");
+                        double distanceToTor = getOuterDistanceBetween(bot, torpedoList.get(0));
+                        int torpedoHeading = torpedoList.get(0).currentHeading;
+                        System.out.println("TORPEDO HEADING : " + torpedoHeading);
+                        if (distanceToTor < 64 && heading_gap(headingToOpp, torpedoHeading) > 5 && bot.hasShield() && !isUsingShield(bot.effects) && bot.getSize() > 25) {
+                            playerAction.action = PlayerActions.ACTIVATESHIELD;
+                            System.out.println("SHIELD ACTIVATED");
+                            defenceMode = true;
+                        }
+                    }
+
+                    if (!defenceMode) {
+                        /* *** OPPONENT CHECKS AND STRATEGY/COMMAND SELECTION *** */
+                        
+                        System.out.println("HAS TORPEDO : " + bot.hasTorpedo());
+                        if (distanceToOpp < 100) {        /* COMBAT MODE */
+                            boolean hasChosenStrat = false;
+                            System.out.println("COMBAT MODE");
+                            if (bot.hasTorpedo() && oppInRange && bot.getSize() > 10) {  /* try torpedo */
+                                System.out.println("TORPEDO FIRED");
+                                playerAction.heading = headingToOpp;
+                                playerAction.action = PlayerActions.FIRETORPEDOES;
+                                hasChosenStrat = true;
+                            }
+                            if (!hasChosenStrat && (bot.getSize() - (distanceToOpp/bot.getSpeed()) > opponents.get(0).getSize())){  /* try afterburner charge */
+                                playerAction.heading = headingToOpp;
+                                if (!isAfterburner(bot.effects) && bot.getSize() > 10) {
+                                    playerAction.action = PlayerActions.STARTAFTERBURNER;
+                                    System.out.println("START AFTERBURNER");
+                                } else {
+                                    System.out.println("CONTINUE AFTERBURNER");
+                                    playerAction.action = PlayerActions.FORWARD;
+                                }
+                                hasChosenStrat = true;   
+                            }
+                            if (!hasChosenStrat && bot.getSize() < opponents.get(0).getSize()) {    /* evade */
+                                System.out.println("EVADE OPPONENT");
+                                DegreeRange oppRange = new DegreeRange((int) (headingToOpp + distanceToOpp/opponents.get(0).getSize()), (int) (headingToOpp - distanceToOpp/opponents.get(0).getSize()));
+                                headingRestriction.add(oppRange);
+                                playerAction.heading = randValidHeading(headingRestriction);
+                                if (!isAfterburner(bot.effects) && bot.getSize() > 10) {
+                                    playerAction.action = PlayerActions.STARTAFTERBURNER;
+                                } else {
+                                    playerAction.action = PlayerActions.FORWARD;
+                                }
+                            }
+
+                            
+                        } else {        /* SAFE MODE */
+                            System.out.println("SAFE MODE");
+
+                            // restrict heading to opponents < 100
+                            for (GameObject opponent : opponents) {
+                                if (getOuterDistanceBetween(bot, opponent) < 100) {
+                                    int headingToThisOpp = getHeadingBetween(opponent);
+                                    int deltaHeading = (int) (opponent.getSize()/getDistanceBetween(opponent, bot));
+                                    DegreeRange toAdd = new DegreeRange(headingToThisOpp+deltaHeading,headingToThisOpp-deltaHeading);
+                                    System.out.println("HEADINGGGGG : "+headingToOpp);
+                                    System.out.println("STARTTT: " + toAdd.getStartDegree() + " END : " + "STARTTT: " + toAdd.getEndDegree());
+                                    headingRestriction.add(toAdd);
+                                }
+                            }
+                            System.out.println("OPPONENT HEADING CHECK DONE");
+
+                            
+                            // check possible food
+                            int indexFood = -1;
+                            for (int i=0; i < foodList.size(); i++) {
+                                if (isHeadingUnrestricted(getHeadingBetween(foodList.get(i)), headingRestriction)){
+                                    indexFood = i;
+                                    break;
+                                }
+                            }
+                            // check possible superfood 
+                            int indexSuperFood = -1;
+                            if (!hasSuperfood(bot.effects)){
+                                for (int i=0; i < superFoodList.size(); i++) {
+                                    if (isHeadingUnrestricted(getHeadingBetween(superFoodList.get(i)), headingRestriction)){
+                                        indexSuperFood = i;
+                                        break;
+                                    }
+                                }
+                            }
+                            // check possible supernova charge 
+                            int indexNovaPickup = -1;
+                            for (int i=0; i < superNovaPickupList.size(); i++) {
+                                if (isHeadingUnrestricted(getHeadingBetween(superNovaPickupList.get(i)), headingRestriction)){
+                                    System.out.println("SUPERNOVA PICKUP DETECTED");
+                                    System.out.println("Pickup location : (" + superNovaPickupList.get(i).getPosition().getX() + "," + superNovaPickupList.get(i).getPosition().getY() + ")");
+                                    indexNovaPickup = i;
+                                    break;
+                                }
+                            }
+                                                
+                            // check whether goes to food or superfood or supernova pickup
+                            double distToFood = (indexFood != -1) ? getDistanceBetween(bot, foodList.get(indexFood)) : worldRadius * 2;
+                            double distToSFood = (indexSuperFood != -1) ? getDistanceBetween(bot, superFoodList.get(indexSuperFood)) : worldRadius * 2;
+                            double distToSNova = (indexNovaPickup != -1) ? getDistanceBetween(bot, superNovaPickupList.get(indexNovaPickup)) : worldRadius * 2;
+
+                            int heading;
+                            if (distToSFood/2 <= distToFood && distToSFood <= distToSNova && distToSFood < worldRadius * 2) {
+                                heading = getHeadingBetween(superFoodList.get(indexSuperFood));
+                                System.out.println("GO TO SUPERFOOD");
+                            } else if (distToSNova/2 <= distToFood && distToSNova <= distToSFood && distToSNova < worldRadius * 2) {
+                                heading = getHeadingBetween(superNovaPickupList.get(indexNovaPickup));
+                                System.out.println("GO TO SUPERNOVA PICKUP");
+                            } else if (distToFood <= distToSFood/2 && distToFood <= distToSNova/2 && distToFood < worldRadius * 2) {
+                                heading = getHeadingBetween(foodList.get(indexFood));
+                                System.out.println("GO TO FOOD");
+                            } else {
+                                heading = randValidHeading(headingRestriction);
+                                System.out.println("RANDOM");
+                            }
+
+                            playerAction.heading = heading;
+                            if (isAfterburner(bot.effects)){
+                                playerAction.action = PlayerActions.STOPAFTERBURNER;
+                                System.out.println("STOPPED AFTERBURNER");
+                            } else {
+                                playerAction.action = PlayerActions.FORWARD;
+                            }
+                        }
+                    }
+                }
+                
                 // info 
                 System.out.println("Tick : " + gameState.world.currentTick);
                 System.out.println("World Radius : " + worldRadius);
@@ -333,13 +302,7 @@ public class BotService extends CheckEffect{
                 System.out.println("Bot heading : " + bot.currentHeading);
                 System.out.println("Bot position : (" + botXPos + "," + botYPos + ")");
                 System.out.println("Bot effects : " + bot.effects);
-                System.out.println("Dist to opp : " + getDistanceBetween(opponents.get(0), bot));
-                System.out.println("Opponents size : " + opponents.get(0).getSize());
-                System.out.println("Heading to opponent : " + getHeadingBetween(opponents.get(0)));
-                // System.out.println("Restriction : " + headingRestriction.toString());
-                // for(DegreeRange range : headingRestriction) {
-                //     System.out.println(range.getStartDegree() + " - " + range.getEndDegree());
-                // }
+
                 System.out.println();
 
             }
@@ -499,53 +462,3 @@ class CheckEffect {
         return effectsUsed(value).contains(16);
     }
   }
-  
-  
-  
-// for (GameObject food : superFoodList) {
-                    //     for (GameObject opponent : opponents) {
-                    //         double distToFood = getDistanceBetween(bot, food);
-                    //         double distToOpp = getDistanceBetween(bot, opponent);
-    
-                    //         if (distToFood < distToOpp) {
-                    //             playerAction.action = PlayerActions.FORWARD;
-                    //             playerAction.heading = getHeadingBetween(food);
-                    //             break;
-                    //         } 
-                    //     }
-                    // }
-
-
-// public void gameInfo() {
-//     List<GameObject> gameObjects = gameState.getGameObjects();
-//     List<GameObject> players = gameState.getPlayerGameObjects();
-//     List<GameObject> opponents = players;
-//     opponents.removeIf(x -> x.getId() == bot.getId());
-//     opponents.stream().sorted(Comparator.comparing(item -> getDistanceBetween(bot,item)));
-
-//     Map<String, List<List<Object>>> GameInfo = new HashMap<>();
-    
-//     for (ObjectTypes type : ObjectTypes.values()) {
-//         List<GameObject> gameObject = gameObjects.stream()
-//                     .filter(item -> item.getGameObjectType() == type)
-//                     .sorted(Comparator
-//                             .comparing(item -> getDistanceBetween(bot, item)))
-//                     .collect(Collectors.toList());
-
-//         List<List<Object>> gameObjectDetails = new ArrayList<>();
-
-//         for(GameObject object : gameObject) {
-//             List<Object> objectDatas = new ArrayList<>();
-//             objectDatas.add(object);
-//             objectDatas.add(getDistanceBetween(bot, object));
-//             objectDatas.add(getHeadingBetween(object));
-
-//             gameObjectDetails.add(objectDatas);
-//         }
-
-//         GameInfo.put(type.toString(), gameObjectDetails);
-//     }
-
-
-
-// }
