@@ -41,7 +41,7 @@ public class BotService {
         // filter opponents from players
         if (!players.isEmpty()) {
             opponents = players;
-            opponents.removeIf(x -> x.getId() == bot.getId());
+            opponents.removeIf(x -> x.getId().equals(bot.getId()));
 
             if (!gameState.getGameObjects().isEmpty()) {
                 // sort opponent by distance with bot
@@ -118,10 +118,10 @@ public class BotService {
                     int headingToCenter = getHeadingBetween(world.getCenterPoint());
                     // DegreeRange toAdd = new DegreeRange(headingToCenter + 95, headingToCenter -
                     // 95);
-                    // headRestric.add(toAdd);
-
-                    headingRestriction.restrictRange(headingToCenter + 180, 95);
-                    System.out.println("NEAR THE WALL");
+                    // headRestric.add(toAdd)
+                    this.playerAction.action = PlayerActions.FORWARD;
+                    this.playerAction.heading = headingToCenter;
+                    return;
                 }
                 System.out.println("PASSED WALL CHECK");
 
@@ -137,7 +137,7 @@ public class BotService {
                         // DegreeRange toAdd = new DegreeRange(headingToAsteroid + intDeltaHeading,
                         // headingToAsteroid - intDeltaHeading);
                         // headRestric.add(toAdd);
-                        headingRestriction.restrictRange(headingToAsteroid, intDeltaHeading);
+                        headingRestriction.restrictRange(headingToAsteroid, getDeltaHeading(asteroidList.get(0)));
                         System.out.println("NEAR THE ASTEROID");
                     }
                     System.out.println("PASSED ASTEROID CHECK");
@@ -153,7 +153,7 @@ public class BotService {
                         // DegreeRange toAdd = new DegreeRange(headingToWormhole + intDeltaHeading,
                         // headingToWormhole - intDeltaHeading);
                         // headRestric.add(toAdd);
-                        headingRestriction.restrictRange(headingToWormhole, intDeltaHeading);
+                        headingRestriction.restrictRange(headingToWormhole, getDeltaHeading(wormholeList.get(0)));
                         System.out.println("NEAR THE WORMHOLE");
                     }
                     System.out.println("PASSED WORMHOLE CHECK");
@@ -170,7 +170,7 @@ public class BotService {
                         // DegreeRange toAdd = new DegreeRange(headingToGasCloud + intDeltaHeading,
                         // headingToGasCloud - intDeltaHeading);
                         // headRestric.add(toAdd);
-                        headingRestriction.restrictRange(headingToGasCloud, intDeltaHeading);
+                        headingRestriction.restrictRange(headingToGasCloud, getDeltaHeading(gasCloudList.get(0)));
 
                         System.out.println("NEAR THE GAS CLOUD");
                     }
@@ -186,8 +186,8 @@ public class BotService {
                 boolean strategied = false;
 
                 // FIRST PRIORITY : if could use torpedoes, FIRE TORPEDOES
-                if (!strategied && degreeValid && bot.hasTorpedo()
-                        && (opponents.get(0).getSize() < bot.getSize() + bot.torpedoSalvoCount * 10)
+                if (!strategied && bot.hasTorpedo()
+                        && bot.getSize() > 75
                         && (distanceToOpp < 50)) {
                     System.out.println("USEEE TORPEDOESSSS");
                     playerAction.heading = headingToOpp;
@@ -220,17 +220,18 @@ public class BotService {
 
                     // restrict heading to opponents < 150
                     for (GameObject opponent : opponents) {
-                        if (getDistanceBetween(bot, opponent) - bot.getSize() - opponent.getSize() < 100) {
+                        if (getDistanceBetween(bot, opponent) < 100) {
                             int headingToThisOpp = getHeadingBetween(opponent);
-                            double deltaHeading = opponent.getSize() / getDistanceBetween(opponent, bot);
-                            int intDeltaHeading = (int) deltaHeading;
-                            DegreeRange toAdd = new DegreeRange(headingToThisOpp + intDeltaHeading,
-                                    headingToThisOpp - intDeltaHeading);
+                            int deltaHeading = (int) toDegrees(opponent.getSize() / getDistanceBetween(opponent, bot));
+                            // DegreeRange toAdd = new DegreeRange(headingToThisOpp + intDeltaHeading,
+                            // headingToThisOpp - intDeltaHeading);
+                            headingRestriction.restrictRange(headingToThisOpp, deltaHeading);
                             System.out.println("HEADINGGGGG : " + headingToOpp);
-                            System.out.println("STARTTT: " + toAdd.getStartDegree() + " END : " + "STARTTT: "
-                                    + toAdd.getEndDegree());
+                            // System.out.println("STARTTT: " + toAdd.getStartDegree() + " END : " +
+                            // "STARTTT: "
+                            // + toAdd.getEndDegree());
                             // headRestric.add(toAdd);
-                            headingRestriction.restrictRange(headingToOpp, intDeltaHeading);
+                            headingRestriction.restrictRange(headingToOpp, deltaHeading);
                         }
                     }
                     System.out.println("PASSED OPPONENT HEADING CHECK");
@@ -299,14 +300,18 @@ public class BotService {
 
                 // use shield as defense
                 if (torpedoList.size() > 0) {
-                    int torpedoHeading = torpedoList.get(0).currentHeading;
                     // int headingToTorpedo = getHeadingBetween(torpedoList.get(0));
-                    System.out.println("TOPERDO HEADINGGG : " + torpedoHeading);
                     // System.out.println("Heading to torpedo : " + headingToTorpedo);
-                    if (bot.hasShield() && !checkEffect(Effects.HasShield)
-                            && (getDistanceBetween(bot, torpedoList.get(0)) < bot.getSize() + 50)
-                            && heading_gap(bot.currentHeading, torpedoHeading) > 5) {
-                        playerAction.action = PlayerActions.ACTIVATESHIELD;
+                    for (GameObject torpedo : torpedoList) {
+                        int torpedoHeading = torpedo.currentHeading;
+                        if (bot.hasShield() && !checkEffect(Effects.HasShield)
+                                && (getDistanceBetween(bot, torpedo) < bot.getSize() + 50)
+                                && heading_gap(bot.currentHeading, torpedoHeading) > 5
+                                && torpedoList.get(0).getSize() >= 2
+                                && bot.getSize() > 30) {
+                            playerAction.action = PlayerActions.ACTIVATESHIELD;
+                            break;
+                        }
                     }
                 }
                 System.out.println("PASSED SHIELD CHECK");
@@ -365,15 +370,6 @@ public class BotService {
         this.playerAction = playerAction;
     }
 
-    public boolean degreeValid(int heading, List<DegreeRange> ranges) {
-        for (DegreeRange range : ranges) {
-            if (range.isInRange(heading)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     public int heading_gap(int heading1, int heading2) {
         // Normalize headings to the range [0, 360)
         heading1 = heading1 % 360;
@@ -392,6 +388,14 @@ public class BotService {
     public void setGameState(GameState gameState) {
         this.gameState = gameState;
         updateSelfState();
+    }
+
+    private int getDeltaHeading(GameObject obstacle) {
+        double cosTheta = (2 * Math.pow(getDistanceBetween(bot, obstacle), 2)
+                - Math.pow(bot.getSize() + obstacle.getSize(), 2))
+                / (2
+                        * Math.pow(getDistanceBetween(bot, obstacle), 2));
+        return (int) Math.round(toDegrees(Math.acos(cosTheta)));
     }
 
     private void updateSelfState() {
