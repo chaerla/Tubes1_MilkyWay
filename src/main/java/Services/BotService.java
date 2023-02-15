@@ -112,18 +112,20 @@ public class BotService {
                 // check if near the wall
                 int botX = bot.getPosition().getX();
                 int botY = bot.getPosition().getY();
-                int worldRadius = gameState.world.getRadius();
+                int worldRadius = world.getRadius();
 
-                if (Math.pow(botX, 2) + Math.pow(botY, 2) >= Math.pow(0.9 * (worldRadius - bot.getSize()), 2)) {
-                    int headingToCenter = getHeadingBetween(world.getCenterPoint());
-                    // DegreeRange toAdd = new DegreeRange(headingToCenter + 95, headingToCenter -
-                    // 95);
-                    // headRestric.add(toAdd)
-                    this.playerAction.action = PlayerActions.FORWARD;
-                    this.playerAction.heading = headingToCenter;
-                    return;
-                }
-                System.out.println("PASSED WALL CHECK");
+                // if ((Math.pow(botX, 2) + Math.pow(botY, 2)) * 0.9 >= Math.pow((worldRadius),
+                // 2)) {
+                // int headingToCenter = getHeadingBetween(world.getCenterPoint());
+                // // DegreeRange toAdd = new DegreeRange(headingToCenter + 95, headingToCenter
+                // -
+                // // 95);
+                // // headRestric.add(toAdd)
+                // this.playerAction.action = PlayerActions.FORWARD;
+                // this.playerAction.heading = headingToCenter;
+                // return;
+                // }
+                // System.out.println("PASSED WALL CHECK");
 
                 // check if is in asteroid field
                 if (asteroidList.size() > 0) {
@@ -276,6 +278,7 @@ public class BotService {
                         // generate random heading
                         boolean thisHeadingValid = false;
                         while (!thisHeadingValid) {
+                            System.out.println("randomizing shit");
                             Random rand = new Random();
                             int randomHeading = rand.nextInt(359);
                             if (headingRestriction.isDegValid(randomHeading)) {
@@ -339,6 +342,11 @@ public class BotService {
                 // playerAction.action = PlayerActions.FORWARD;
                 // System.out.println("=====Countered wall, headed to : " + bot.currentHeading);
                 // }
+                if (!((Math.pow(bot.getPosition().x, 2) + Math.pow(bot.getPosition().y,
+                        2)) < Math.pow(gameState.getWorld().getRadius() - bot.getSize(), 2))) {
+                    playerAction.action = PlayerActions.FORWARD;
+                    playerAction.heading = getHeadingBetween(world.getCenterPoint());
+                }
 
                 // info
                 System.out.println();
