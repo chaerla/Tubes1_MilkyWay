@@ -6,9 +6,7 @@ import Models.*;
 import java.util.*;
 import java.util.stream.*;
 
-import com.fasterxml.jackson.databind.ser.impl.IndexedListSerializer;
-
-public class BotService extends CheckEffect{
+public class BotService {
     private GameObject bot;
     private PlayerAction playerAction;
     private GameState gameState;
@@ -124,7 +122,7 @@ public class BotService extends CheckEffect{
 
                 // check if is in asteroid field
                 if (asteroidList.size() > 0){
-                    if (isInAsteroidField(bot.effects) || getDistanceBetween(asteroidList.get(0), bot) <= bot.getSize()*1.1) {
+                    if (checkEffect(Effects.InAsteroidField) || getDistanceBetween(asteroidList.get(0), bot) <= bot.getSize()*1.1) {
                         int headingToAsteroid = getHeadingBetween(asteroidList.get(0));
                         double deltaHeading = asteroidList.get(0).getSize()/getDistanceBetween(asteroidList.get(0), bot);
                         int intDeltaHeading = (int) deltaHeading;
@@ -150,7 +148,7 @@ public class BotService extends CheckEffect{
 
                 // check if near gas cloud
                 if (gasCloudList.size() > 0){
-                    if (isInGasCloud(bot.effects) || getDistanceBetween(gasCloudList.get(0), bot) <= bot.getSize()*1.1) {
+                    if (checkEffect(Effects.InGasCloud) || getDistanceBetween(gasCloudList.get(0), bot) <= bot.getSize()*1.1) {
                         int headingToGasCloud = getHeadingBetween(gasCloudList.get(0));
                         double deltaHeading = gasCloudList.get(0).getSize()/getDistanceBetween(gasCloudList.get(0), bot);
                         int intDeltaHeading = (int) deltaHeading;
@@ -167,7 +165,7 @@ public class BotService extends CheckEffect{
 
                 boolean strategied = false;
 
-                // if could use torpedoes
+                // FIRST PRIORITY : if could use torpedoes, FIRE TORPEDOES
                 if (!strategied && degreeValid && bot.hasTorpedo() && (opponents.get(0).getSize() < bot.getSize() + bot.torpedoSalvoCount*10) && (distanceToOpp < 50)) {
                     System.out.println("USEEE TORPEDOESSSS");
                     playerAction.heading = headingToOpp;
@@ -177,11 +175,11 @@ public class BotService extends CheckEffect{
                 } 
                 System.out.println("PASSED USE TORPEDO CHECK");
 
-                // if could use after burner
+                // SECOND PRIORITY : if could chase, CHASE!!
                 if (!strategied && degreeValid && (bot.getSize() - (distanceToOpp/bot.getSpeed()) > opponents.get(0).getSize())){
                     System.out.println("USE AFTERRRRBURNERRRRRR");
                     playerAction.heading = headingToOpp;
-                    if (!isAfterburner(bot.effects)) {
+                    if (!checkEffect(Effects.IsAfterburner)) {
                         playerAction.action = PlayerActions.STARTAFTERBURNER;
                     } else {
                         playerAction.action = PlayerActions.FORWARD;
@@ -191,7 +189,7 @@ public class BotService extends CheckEffect{
                 }
                 System.out.println("PASSED USE AFTERBURNER CHECK");
 
-                // finding food
+                // ELSE, 
                 if (!strategied){
                     
                     System.out.println("PASSED STOP AFTERBURNER CHECK");
@@ -223,7 +221,7 @@ public class BotService extends CheckEffect{
 
                     // check possible superfood 
                     int indexSuperFood = -1;
-                    if (!hasSuperfood(bot.effects)){
+                    if (checkEffect(Effects.HasSuperfood)){
                         for (int i=0; i < superFoodList.size(); i++) {
                             if (degreeValid(getHeadingBetween(superFoodList.get(i)), headRestric)){
                                 indexSuperFood = i;
@@ -263,7 +261,7 @@ public class BotService extends CheckEffect{
                   
                         
                     playerAction.heading = heading;
-                    if (isAfterburner(bot.effects)){
+                    if (checkEffect(Effects.IsAfterburner)){
                         playerAction.action = PlayerActions.STOPAFTERBURNER;
                         System.out.println("STOPPPPPPPPPPPPPPPPPPPPPPPP");
                     } else {
@@ -278,7 +276,7 @@ public class BotService extends CheckEffect{
                     // int headingToTorpedo = getHeadingBetween(torpedoList.get(0));
                     System.out.println("TOPERDO HEADINGGG : " + torpedoHeading);
                     // System.out.println("Heading to torpedo : " + headingToTorpedo);
-                    if (bot.hasShield() && !isUsingShield(bot.effects) && (getDistanceBetween(bot, torpedoList.get(0)) < bot.getSize() + 50) && heading_gap(headingToOpp, torpedoHeading) > 5) {
+                    if (bot.hasShield() && !checkEffect(Effects.HasShield) && (getDistanceBetween(bot, torpedoList.get(0)) < bot.getSize() + 50) && heading_gap(headingToOpp, torpedoHeading) > 5) {
                         playerAction.action = PlayerActions.ACTIVATESHIELD;
                     }
                 }
@@ -334,7 +332,7 @@ public class BotService extends CheckEffect{
         for (DegreeRange range : ranges) {
             if (range.isInRange(heading)) {
                 return false;
-            }
+            } 
         }
         return true;
     }
@@ -386,132 +384,7 @@ public class BotService extends CheckEffect{
         return (int) (v * (180 / Math.PI));
     }
 
+    private boolean checkEffect(Effects effect){
+        return ((bot.effects&effect.getValue())== effect.getValue());
+    }
 }
-
-class DegreeRange {
-    private int startDegree;
-    private int endDegree;
-  
-    public DegreeRange(int startDegree, int endDegree) {
-      this.startDegree = normalizeDegree(startDegree);
-      this.endDegree = normalizeDegree(endDegree);
-    }
-  
-    public int getStartDegree() {
-      return startDegree;
-    }
-  
-    public int getEndDegree() {
-      return endDegree;
-    }
-  
-    public void setStartDegree(int startDegree) {
-      this.startDegree = normalizeDegree(startDegree);
-    }
-  
-    public void setEndDegree(int endDegree) {
-      this.endDegree = normalizeDegree(endDegree);
-    }
-  
-    public boolean isInRange(int degree) {
-      degree = normalizeDegree(degree);
-      if (startDegree <= endDegree) {
-        return degree >= startDegree && degree <= endDegree;
-      } else {
-        return degree >= startDegree || degree <= endDegree;
-      }
-    }
-  
-    private int normalizeDegree(int degree) {
-      degree %= 360;
-      if (degree < 0) {
-        degree += 360;
-      }
-      return degree;
-    }
-  }
-
-  class CheckEffect {
-    private List<Integer> numbers = new ArrayList<>(Arrays.asList(1,2,4,8,16));
-
-    public List<Integer> effectsUsed (Integer effect){
-        List<Integer> effects = new ArrayList<>();
-        for (int i = numbers.size() - 1; i >= 0; i--) {
-          while (effect >= numbers.get(i)) {
-            effect -= numbers.get(i);
-            effects.add(numbers.get(i));
-          }
-        }
-        return effects;
-    }
-
-    public boolean isAfterburner(Integer value) {
-        return effectsUsed(value).contains(1);
-    }
-
-    public boolean isInAsteroidField(Integer value) {
-        return effectsUsed(value).contains(2);
-    }
-
-    public boolean isInGasCloud(Integer value) {
-        return effectsUsed(value).contains(4);
-    }
-
-    public boolean hasSuperfood(Integer value) {
-        return effectsUsed(value).contains(8);
-    }
-
-    public boolean isUsingShield(Integer value) {
-        return effectsUsed(value).contains(16);
-    }
-  }
-  
-  
-  
-// for (GameObject food : superFoodList) {
-                    //     for (GameObject opponent : opponents) {
-                    //         double distToFood = getDistanceBetween(bot, food);
-                    //         double distToOpp = getDistanceBetween(bot, opponent);
-    
-                    //         if (distToFood < distToOpp) {
-                    //             playerAction.action = PlayerActions.FORWARD;
-                    //             playerAction.heading = getHeadingBetween(food);
-                    //             break;
-                    //         } 
-                    //     }
-                    // }
-
-
-// public void gameInfo() {
-//     List<GameObject> gameObjects = gameState.getGameObjects();
-//     List<GameObject> players = gameState.getPlayerGameObjects();
-//     List<GameObject> opponents = players;
-//     opponents.removeIf(x -> x.getId() == bot.getId());
-//     opponents.stream().sorted(Comparator.comparing(item -> getDistanceBetween(bot,item)));
-
-//     Map<String, List<List<Object>>> GameInfo = new HashMap<>();
-    
-//     for (ObjectTypes type : ObjectTypes.values()) {
-//         List<GameObject> gameObject = gameObjects.stream()
-//                     .filter(item -> item.getGameObjectType() == type)
-//                     .sorted(Comparator
-//                             .comparing(item -> getDistanceBetween(bot, item)))
-//                     .collect(Collectors.toList());
-
-//         List<List<Object>> gameObjectDetails = new ArrayList<>();
-
-//         for(GameObject object : gameObject) {
-//             List<Object> objectDatas = new ArrayList<>();
-//             objectDatas.add(object);
-//             objectDatas.add(getDistanceBetween(bot, object));
-//             objectDatas.add(getHeadingBetween(object));
-
-//             gameObjectDetails.add(objectDatas);
-//         }
-
-//         GameInfo.put(type.toString(), gameObjectDetails);
-//     }
-
-
-
-// }
