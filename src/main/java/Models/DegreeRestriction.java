@@ -98,4 +98,5 @@ public class DegreeRestriction {
         }
         return deg;
     }
+
 }
