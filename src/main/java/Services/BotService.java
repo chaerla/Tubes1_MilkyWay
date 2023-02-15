@@ -112,9 +112,9 @@ public class BotService {
                 // check if near the wall
                 int botX = bot.getPosition().getX();
                 int botY = bot.getPosition().getY();
-                int worldRadius = gameState.world.getRadius();
+                int worldRadius = world.getRadius();
 
-                if (Math.pow(botX, 2) + Math.pow(botY, 2) >= Math.pow(0.9 * (worldRadius - bot.getSize()), 2)) {
+                if ((Math.pow(botX, 2) + Math.pow(botY, 2)) * 0.9 >= Math.pow((worldRadius), 2)) {
                     int headingToCenter = getHeadingBetween(world.getCenterPoint());
                     // DegreeRange toAdd = new DegreeRange(headingToCenter + 95, headingToCenter -
                     // 95);
@@ -276,6 +276,7 @@ public class BotService {
                         // generate random heading
                         boolean thisHeadingValid = false;
                         while (!thisHeadingValid) {
+                            System.out.println("randomizing shit");
                             Random rand = new Random();
                             int randomHeading = rand.nextInt(359);
                             if (headingRestriction.isDegValid(randomHeading)) {
