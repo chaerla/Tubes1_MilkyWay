@@ -168,15 +168,13 @@ public class BotService {
 
                 // SECOND PRIORITY : if could teleport, TELEPORT TO OPPONENTS
                 if (!strategied && bot.hasTeleporter() && (opponents.get(0).getSize() < bot.getSize() - 25) && (distanceToOpp < 50)) {
-                    System.out.println("USEEE TELEPORTERR");
                     playerAction.heading = headingToOpp;
                     playerAction.action = PlayerActions.FIRETELEPORT;
                     // playerAction.action = PlayerActions.FORWARD;
                     strategied = true;
-                } 
-
+                    System.out.println("V -- USING TELEPORTER");
+                }
                 
-
                 // THIRD PRIORITY : if could use torpedoes, FIRE TORPEDOES
                 if (!strategied && degreeValid && bot.hasTorpedo() && (opponents.get(0).getSize() < bot.getSize() - bot.torpedoSalvoCount*10) && (distanceToOpp < 50)) {
                     System.out.println("USEEE TORPEDOESSSS");
