@@ -186,15 +186,15 @@ public class BotService {
                 boolean strategied = false;
 
                 // FIRST PRIORITY : if could use torpedoes, FIRE TORPEDOES
-                if (!strategied && bot.hasTorpedo()
-                        && bot.getSize() > 75
-                        && (distanceToOpp < 50)) {
-                    System.out.println("USEEE TORPEDOESSSS");
-                    playerAction.heading = headingToOpp;
-                    playerAction.action = PlayerActions.FIRETORPEDOES;
-                    // playerAction.action = PlayerActions.FORWARD;
-                    strategied = true;
-                }
+                // if (!strategied && bot.hasTorpedo()
+                //         && bot.getSize() > 75
+                //         && (distanceToOpp < 50)) {
+                //     System.out.println("USEEE TORPEDOESSSS");
+                //     playerAction.heading = headingToOpp;
+                //     playerAction.action = PlayerActions.FIRETORPEDOES;
+                //     // playerAction.action = PlayerActions.FORWARD;
+                //     strategied = true;
+                // }
                 System.out.println("PASSED USE TORPEDO CHECK");
 
                 // SECOND PRIORITY : if could chase, CHASE!!
