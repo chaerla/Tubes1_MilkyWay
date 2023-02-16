@@ -47,7 +47,6 @@ public class BotService {
         System.out.println("Bot Y           : " + bot.getPosition().getY());
         System.out.println("Bot effects     : " + bot.effects);
         System.out.println();
-        
 
         // filter opponents from players
         if (!players.isEmpty()) {
@@ -141,7 +140,8 @@ public class BotService {
                 // check if is in asteroid field
                 if (asteroidList.size() > 0) {
                     if (checkEffect(Effects.InAsteroidField)
-                            || getDistanceBetween(asteroidList.get(0), bot) - bot.getSize() - asteroidList.get(0).getSize() <= 20) {
+                            || getDistanceBetween(asteroidList.get(0), bot) - bot.getSize()
+                                    - asteroidList.get(0).getSize() <= 20) {
                         int headingToAsteroid = getHeadingBetween(asteroidList.get(0));
                         // double deltaHeading = toDegrees(asteroidList.get(0).getSize()
                         // / getDistanceBetween(asteroidList.get(0), bot));
@@ -150,7 +150,8 @@ public class BotService {
                         // headingToAsteroid - intDeltaHeading);
                         // headRestric.add(toAdd);
                         headingRestriction.restrictRange(headingToAsteroid, getDeltaHeading(asteroidList.get(0)));
-                        System.out.println("DETECTED    : NEAR THE ASTEROID with distance " + getDistanceBetween(bot, asteroidList.get(0)));
+                        System.out.println("DETECTED    : NEAR THE ASTEROID with distance "
+                                + getDistanceBetween(bot, asteroidList.get(0)));
                         System.out.println("    Asteroid Size   : " + asteroidList.get(0).getSize());
                     }
                 }
@@ -160,13 +161,14 @@ public class BotService {
                     if (getDistanceBetween(wormholeList.get(0), bot) <= 20) {
                         int headingToWormhole = getHeadingBetween(wormholeList.get(0));
                         // double deltaHeading = wormholeList.get(0).getSize()
-                        //         / getDistanceBetween(wormholeList.get(0), bot);
+                        // / getDistanceBetween(wormholeList.get(0), bot);
                         // int intDeltaHeading = (int) deltaHeading;
                         // DegreeRange toAdd = new DegreeRange(headingToWormhole + intDeltaHeading,
                         // headingToWormhole - intDeltaHeading);
                         // headRestric.add(toAdd);
                         headingRestriction.restrictRange(headingToWormhole, getDeltaHeading(wormholeList.get(0)));
-                        System.out.println("DETECTED    : NEAR THE WORMHOLE with distance " + getDistanceBetween(bot, wormholeList.get(0)));
+                        System.out.println("DETECTED    : NEAR THE WORMHOLE with distance "
+                                + getDistanceBetween(bot, wormholeList.get(0)));
                         System.out.println("    Wormhole Size   : " + wormholeList.get(0).getSize());
                     }
                     // System.out.println("PASSED WORMHOLE CHECK");
@@ -175,22 +177,25 @@ public class BotService {
                 // check if near gas cloud
                 if (gasCloudList.size() > 0) {
                     if (checkEffect(Effects.InGasCloud)
-                            || getDistanceBetween(gasCloudList.get(0), bot) - bot.getSize() - gasCloudList.get(0).getSize() <= 20) {
+                            || getDistanceBetween(gasCloudList.get(0), bot) - bot.getSize()
+                                    - gasCloudList.get(0).getSize() <= 20) {
                         int headingToGasCloud = getHeadingBetween(gasCloudList.get(0));
                         // double deltaHeading = gasCloudList.get(0).getSize()
-                        //         / getDistanceBetween(gasCloudList.get(0), bot);
+                        // / getDistanceBetween(gasCloudList.get(0), bot);
                         // int intDeltaHeading = (int) deltaHeading;
                         // DegreeRange toAdd = new DegreeRange(headingToGasCloud + intDeltaHeading,
                         // headingToGasCloud - intDeltaHeading);
                         // headRestric.add(toAdd);
                         headingRestriction.restrictRange(headingToGasCloud, getDeltaHeading(gasCloudList.get(0)));
 
-                        System.out.println("DETECTED    : NEAR THE GAS CLOUD with distance " + getDistanceBetween(bot, gasCloudList.get(0)));
+                        System.out.println("DETECTED    : NEAR THE GAS CLOUD with distance "
+                                + getDistanceBetween(bot, gasCloudList.get(0)));
                         System.out.println("    GasCloud Size   : " + gasCloudList.get(0).getSize());
                     }
                 }
 
-                double distanceToOpp = getDistanceBetween(bot, opponents.get(0)) - bot.getSize() - opponents.get(0).getSize();
+                double distanceToOpp = getDistanceBetween(bot, opponents.get(0)) - bot.getSize()
+                        - opponents.get(0).getSize();
                 int headingToOpp = getHeadingBetween(opponents.get(0));
                 boolean degreeValid = headingRestriction.isDegValid(headingToOpp); // degreeValid(headingToOpp,
                                                                                    // headRestric);
@@ -198,28 +203,45 @@ public class BotService {
                 boolean strategied = false;
                 boolean chase = false;
 
+                // use teleporter
+                if (!strategied && bot.hasTeleporter() && opponents.get(0).getSize() < bot.getSize() - 25) {
+                    playerAction.action = PlayerActions.FIRETELEPORT;
+                    playerAction.heading = headingToOpp;
+                    System.out.println("FIREEEE TELEPORTERRRRRRRRRRRRR");
+                    strategied = true;
+                }
+
                 // FIRST PRIORITY : if could use torpedoes, FIRE TORPEDOES
                 if (!strategied && bot.hasTorpedo()
-                        && bot.getSize() > 50 && (((foodList.size() + bot.getSize() < opponents.get(0).getSize()) && distanceToOpp < world.getRadius() * 0.6) || (opponents.get(0).getSize() < bot.getSize() - bot.torpedoSalvoCount*10 &&(distanceToOpp < 75)))) {
+                        && bot.getSize() > 50
+                        && (((foodList.size() + bot.getSize() < opponents.get(0).getSize())
+                                && distanceToOpp < world.getRadius() * 0.6)
+                                || (opponents.get(0).getSize() < bot.getSize() - bot.torpedoSalvoCount * 10
+                                        && (distanceToOpp < 75)))) {
                     System.out.println("FIRING TORPEDOES");
                     playerAction.action = PlayerActions.FIRETORPEDOES;
                     playerAction.heading = headingToOpp;
                     // playerAction.action = PlayerActions.FORWARD;
                     strategied = true;
-                    if (checkEffect(Effects.IsAfterburner) && (bot.getSize() - (distanceToOpp / (checkEffect(Effects.IsAfterburner) ? bot.getSpeed() : 2*bot.getSpeed())) > opponents.get(0).getSize()*1.25) && distanceToOpp < world.getRadius() * 0.8){
+                    if (checkEffect(Effects.IsAfterburner)
+                            && (bot.getSize() - (distanceToOpp / (checkEffect(Effects.IsAfterburner) ? bot.getSpeed()
+                                    : 2 * bot.getSpeed())) > opponents.get(0).getSize() * 1.25)
+                            && distanceToOpp < world.getRadius() * 0.8) {
                         chase = true;
                     }
                 }
                 // System.out.println("PASSED USE TORPEDO CHECK");
 
                 // SECOND PRIORITY : if could chase, CHASE!!
-                if (!strategied && degreeValid && (bot.getSize() - (distanceToOpp / (checkEffect(Effects.IsAfterburner) ? bot.getSpeed() : 2*bot.getSpeed())) > opponents.get(0).getSize()*1.25) && distanceToOpp < world.getRadius() * 0.8) {
+                if (!strategied && degreeValid
+                        && (bot.getSize() - (distanceToOpp / (checkEffect(Effects.IsAfterburner) ? bot.getSpeed()
+                                : 2 * bot.getSpeed())) > opponents.get(0).getSize() * 1.25)
+                        && distanceToOpp < world.getRadius() * 0.8) {
                     System.out.println("USING AFTERBURNER");
                     if (!checkEffect(Effects.IsAfterburner)) {
                         playerAction.action = PlayerActions.STARTAFTERBURNER;
                         playerAction.heading = headingToOpp;
-                    } 
-                    else {
+                    } else {
                         playerAction.action = PlayerActions.FORWARD;
                         playerAction.heading = headingToOpp;
                     }
@@ -239,7 +261,8 @@ public class BotService {
                     for (GameObject opponent : opponents) {
                         if (getDistanceBetween(bot, opponent) < 100 && bot.getSize() < opponent.getSize()) {
                             int headingToThisOpp = getHeadingBetween(opponent);
-                            // int deltaHeading = (int) toDegrees(opponent.getSize() / getDistanceBetween(opponent, bot));
+                            // int deltaHeading = (int) toDegrees(opponent.getSize() /
+                            // getDistanceBetween(opponent, bot));
                             // DegreeRange toAdd = new DegreeRange(headingToThisOpp + intDeltaHeading,
                             // headingToThisOpp - intDeltaHeading);
                             // headingRestriction.restrictRange(headingToThisOpp, deltaHeading);
@@ -249,7 +272,8 @@ public class BotService {
                             // + toAdd.getEndDegree());
                             // headRestric.add(toAdd);
                             headingRestriction.restrictRange(headingToThisOpp, getDeltaHeading(opponent));
-                            System.out.println("DETECTED    : OPPONENT with distance " + getDistanceBetween(bot, opponent));
+                            System.out.println(
+                                    "DETECTED    : OPPONENT with distance " + getDistanceBetween(bot, opponent));
                             // headingRestriction.restrictRange(headingToOpp, deltaHeading);
                         }
                     }
@@ -279,7 +303,8 @@ public class BotService {
 
                     // check whether goes to food or superfood
                     if (indexFood != -1 && indexSuperFood != -1) {
-                        if (getDistanceBetween(bot, foodList.get(indexFood)) * 1.5 >= getDistanceBetween(bot, superFoodList.get(indexSuperFood))) {
+                        if (getDistanceBetween(bot, foodList.get(indexFood)) * 1.5 >= getDistanceBetween(bot,
+                                superFoodList.get(indexSuperFood))) {
                             // go to superfood
                             heading = getHeadingBetween(superFoodList.get(indexSuperFood));
                             System.out.println("ACTION      : GO TO SUPERFOOD");
@@ -313,10 +338,10 @@ public class BotService {
                     playerAction.action = PlayerActions.FORWARD;
                     playerAction.heading = heading;
                     // if (checkEffect(Effects.IsAfterburner)) {
-                    //     playerAction.action = PlayerActions.STOPAFTERBURNER;
-                    //     System.out.println("ACTION : STOPPING AFTER BURNER");
+                    // playerAction.action = PlayerActions.STOPAFTERBURNER;
+                    // System.out.println("ACTION : STOPPING AFTER BURNER");
                     // } else {
-                    //     playerAction.action = PlayerActions.FORWARD;
+                    // playerAction.action = PlayerActions.FORWARD;
                     // }
 
                 }
@@ -366,33 +391,35 @@ public class BotService {
 
                 // counter the wall
                 if (!((Math.pow(bot.getPosition().x, 2) + Math.pow(bot.getPosition().y,
-                        2)) < Math.pow(0.9*(gameState.getWorld().getRadius() - bot.getSize()), 2))
+                        2)) < Math.pow(0.9 * (gameState.getWorld().getRadius() - bot.getSize()), 2))
                         && playerAction.action != PlayerActions.FIRETORPEDOES) {
                     System.out.println("DETECT  : WALL");
                     playerAction.action = PlayerActions.FORWARD;
                     playerAction.heading = getHeadingBetween(world.getCenterPoint());
                 }
-                
+
                 // stop afterburner
-                
+
                 if (checkEffect(Effects.IsAfterburner) && !chase) {
                     playerAction.action = PlayerActions.STOPAFTERBURNER;
                     System.out.println("ACTION  : STOPPING AFTER BURNER");
                 }
 
                 // info
-                
-                // System.out.println("Dist to opp : " + getDistanceBetween(opponents.get(0), bot));
+
+                // System.out.println("Dist to opp : " + getDistanceBetween(opponents.get(0),
+                // bot));
                 // System.out.println("Opponents size : " + opponents.get(0).getSize());
-                // System.out.println("Heading to opponent : " + getHeadingBetween(opponents.get(0)));
+                // System.out.println("Heading to opponent : " +
+                // getHeadingBetween(opponents.get(0)));
                 // System.out.println("Restriction : " + headRestric.toString());
                 // for (DegreeRange range : headRestric) {
                 // System.out.println(range.getStartDegree() + " - " + range.getEndDegree());
                 // }
                 // for (int i = 0; i < 360; i++) {
-                //     if (!headingRestriction.isDegValid(i)) {
-                //         System.out.print(i + " ");
-                //     }
+                // if (!headingRestriction.isDegValid(i)) {
+                // System.out.print(i + " ");
+                // }
                 // }
                 // headingRestriction.printValidDegrees(headingRestriction);
                 printRestrictedDegrees(headingRestriction);
@@ -405,7 +432,6 @@ public class BotService {
         this.playerAction = playerAction;
     }
 
-
     public void printRestrictedDegrees(DegreeRestriction restriction) {
         int start = -1;
         for (int i = 0; i < 360; i++) {
@@ -415,7 +441,7 @@ public class BotService {
                 }
             } else {
                 if (start != -1) {
-                    System.out.printf("%d to %d degrees\n", start, i-1);
+                    System.out.printf("%d to %d degrees\n", start, i - 1);
                     start = -1;
                 }
             }
