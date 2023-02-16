@@ -241,14 +241,19 @@ public class BotService {
                 boolean strategied = false;
                 boolean chase = false;
 
-                // FIRST PRIORITY (A) : use teleporter (teleporter not deployed)
+                // FIRST PRIORITY (A) : fire teleporter (teleporter not deployed)
                 if (!strategied && bot.hasTeleporter()) {
                     int oppIndex = -1;
-                    for (int i = 0; i < activeTeleporterHeadings.size(); i++) {
-                        if (opponentsBySize.get(i).getSize() < bot.getSize() - 30 && getDistanceBetween(bot, opponentsBySize.get(i)) < 0.8 * world.getRadius() 
-                            && !activeTeleporterHeadings.contains(getHeadingBetween(opponentsBySize.get(i)))) {
-                            oppIndex = i;
-                            break;
+                    for (int i = 0; i < opponentsBySize.size(); i++) {
+                        if (opponentsBySize.get(i).getSize() < bot.getSize() - 30 && bot.getSize() > 60 && getDistanceBetween(bot, opponentsBySize.get(i)) < 0.6 * world.getRadius()) {
+                            boolean isNearExistingTele = false;
+                            for (int j = -5; j <= 5; j++) {
+                                isNearExistingTele = isNearExistingTele || (activeTeleporterHeadings.contains((getHeadingBetween(opponentsBySize.get(i)) + j) % 360));
+                            }
+                            if (!isNearExistingTele) {
+                                oppIndex = i;
+                                break;
+                            }
                         } else if (opponentsBySize.get(i).getSize() > bot.getSize()) {
                             break;
                         }
@@ -309,11 +314,11 @@ public class BotService {
                         && distToNearestOpp < world.getRadius() * 0.8) {
                     System.out.println("USING AFTERBURNER");
                     if (!checkEffect(Effects.IsAfterburner)) {
+                        playerAction.heading = headToNearestOpp;
                         playerAction.action = PlayerActions.STARTAFTERBURNER;
-                        playerAction.heading = headToNearestOpp;
                     } else {
-                        playerAction.action = PlayerActions.FORWARD;
                         playerAction.heading = headToNearestOpp;
+                        playerAction.action = PlayerActions.FORWARD;
                     }
                     // playerAction.heading = headingToOpp;
                     // playerAction.action = PlayerActions.FORWARD;
@@ -431,8 +436,8 @@ public class BotService {
                     // System.out.println("PASSED FOODS CHECK");
 
                     // shutdown afterburner
-                    playerAction.action = PlayerActions.FORWARD;
                     playerAction.heading = heading;
+                    playerAction.action = PlayerActions.FORWARD;
                     // if (checkEffect(Effects.IsAfterburner)) {
                     // playerAction.action = PlayerActions.STOPAFTERBURNER;
                     // System.out.println("ACTION : STOPPING AFTER BURNER");
