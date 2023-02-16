@@ -149,6 +149,13 @@ public class BotService {
                         .sorted(Comparator
                                 .comparing(item -> getDistanceBetween(bot, item)))
                         .collect(Collectors.toList());
+                // food by heading gap
+                List<GameObject> foodListByHeadingGap = gameObjects.stream()
+                        .filter(item -> item.getGameObjectType() == ObjectTypes.FOOD)
+                        .sorted(Comparator
+                                .comparing(item -> heading_gap(bot.currentHeading, item.currentHeading)))
+                        .collect(Collectors.toList());
+
                 activeTeleporterHeadings.clear();
                 for (int i = 0; i < teleporterList.size(); i++) {       // update activeTeleporterHeading
                     activeTeleporterHeadings.add(teleporterList.get(i).currentHeading);
@@ -250,11 +257,11 @@ public class BotService {
 
                 // SECOND PRIORITY : if could use torpedoes, FIRE TORPEDOES
                 if (!strategied && bot.hasTorpedo()
-                        && bot.getSize() > 60
+                        && bot.getSize() > 50
                         && (((foodList.size() + bot.getSize() < opponentsByDist.get(0).getSize())
                                 && distToNearestOpp < world.getRadius() * 0.4)
                                 || (opponentsByDist.get(0).getSize() < bot.getSize() - bot.torpedoSalvoCount * 10
-                                        || (distToNearestOpp < 75)))) {
+                                       && distToNearestOpp < world.getRadius() * 1.2 )|| (distToNearestOpp < 75))) {
                     System.out.println("FIRING TORPEDOES");
                     playerAction.heading = headToNearestOpp;
                     playerAction.action = PlayerActions.FIRETORPEDOES;
@@ -308,7 +315,6 @@ public class BotService {
                     // System.out.println("PASSED OPPONENT HEADING CHECK");
 
                     int heading = -1;
-
                     // check possible food
                     int indexFood = -1;
                     for (int i = 0; i < foodList.size(); i++) {
@@ -326,6 +332,14 @@ public class BotService {
                                 indexSuperFood = i;
                                 break;
                             }
+                        }
+                    }
+                    // check food with closest heading gap
+                    for (int i = 0; i < foodListByHeadingGap.size(); i++) {
+                        GameObject currFood = foodListByHeadingGap.get(i);
+                        if (headingRestriction.isDegValid(getHeadingBetween(currFood)) && Math.abs(getDistanceBetween(bot, foodList.get(indexFood)) - getDistanceBetween(currFood, bot)) <= 2) {
+                            indexFood = foodList.indexOf(foodList.stream().filter(item -> item.currentHeading == currFood.currentHeading).findFirst().orElse(null));
+                            break;
                         }
                     }
 
@@ -397,7 +411,7 @@ public class BotService {
                 }
 
                 // stop afterburner
-                if (checkEffect(Effects.IsAfterburner) && (!chase || checkEffect(Effects.HasShield))) {
+                if (checkEffect(Effects.IsAfterburner) && (!chase || checkEffect(Effects.HasShield) || (getDistanceBetween(opponentsByDist.get(0), bot) < bot.getSize() * 2 && opponentsByDist.get(0).getSize() > bot.getSize()))) {
                     playerAction.action = PlayerActions.STOPAFTERBURNER;
                     System.out.println("ACTION  : STOPPING AFTER BURNER");
                 }
