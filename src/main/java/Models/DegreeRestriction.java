@@ -67,14 +67,14 @@ public class DegreeRestriction {
         int rotateCCwise = currentHeading;
 
         // search clockwise
-        while (this.degree[rotateCwise] == false) {
-            rotateCwise = normalizeDegree(rotateCwise - increment);
-            CShift += increment;
+        while (this.degree[rotateCwise]) {
+            rotateCwise = normalizeDegree(currentHeading - CShift);
+            CShift++;
         }
         // search cclockwise
-        while (this.degree[rotateCCwise] == false) {
-            rotateCCwise = normalizeDegree(rotateCCwise + increment);
-            CCShift += increment;
+        while (this.degree[rotateCCwise]) {
+            rotateCCwise = normalizeDegree(currentHeading + CCShift);
+            CCShift++;
         }
 
         if (CShift < CCShift) {
