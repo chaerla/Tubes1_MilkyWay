@@ -157,7 +157,7 @@ public class BotService {
 
                 // check if is in wormhole field
                 if (wormholeList.size() > 0) {
-                    if (getDistanceBetween(wormholeList.get(0), bot) - bot.getSize() - wormholeList.get(0).getSize() <= 20) {
+                    if (getDistanceBetween(wormholeList.get(0), bot) <= 20) {
                         int headingToWormhole = getHeadingBetween(wormholeList.get(0));
                         // double deltaHeading = wormholeList.get(0).getSize()
                         //         / getDistanceBetween(wormholeList.get(0), bot);
@@ -208,7 +208,7 @@ public class BotService {
                     playerAction.heading = headingToOpp;
                     // playerAction.action = PlayerActions.FORWARD;
                     strategied = true;
-                    if (checkEffect(Effects.IsAfterburner)){
+                    if (checkEffect(Effects.IsAfterburner) && (bot.getSize() - (distanceToOpp / (checkEffect(Effects.IsAfterburner) ? bot.getSpeed() : 2*bot.getSpeed())) > opponents.get(0).getSize()*1.25)){
                         chase = true;
                     }
                 }
@@ -219,11 +219,13 @@ public class BotService {
                     System.out.println("USING AFTERBURNER");
                     if (!checkEffect(Effects.IsAfterburner)) {
                         playerAction.action = PlayerActions.STARTAFTERBURNER;
+                        playerAction.heading = headingToOpp;
                     } 
                     else {
                         playerAction.action = PlayerActions.FORWARD;
+                        playerAction.heading = headingToOpp;
                     }
-                    playerAction.heading = headingToOpp;
+                    // playerAction.heading = headingToOpp;
                     // playerAction.action = PlayerActions.FORWARD;
                     strategied = true;
                     chase = true;
