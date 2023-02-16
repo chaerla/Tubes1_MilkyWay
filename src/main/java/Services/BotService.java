@@ -10,10 +10,12 @@ public class BotService {
     private GameObject bot;
     private PlayerAction playerAction;
     private GameState gameState;
+    private Integer currentTeleporterHeading;
 
     public BotService() {
         this.playerAction = new PlayerAction();
         this.gameState = new GameState();
+        this.currentTeleporterHeading = -1;
     }
 
     public GameObject getBot() {
@@ -30,6 +32,20 @@ public class BotService {
 
     public void setPlayerAction(PlayerAction playerAction) {
         this.playerAction = playerAction;
+    }
+
+    private boolean isTeleporterActive() {
+        return this.currentTeleporterHeading != -1;
+    }
+
+    private void saveTeleporterHeading(Integer teleportHeading) {
+        currentTeleporterHeading = teleportHeading;
+    }
+
+    private void removeCurrentTeleporter() {
+        if (this.isTeleporterActive()) {
+            currentTeleporterHeading = -1;
+        }
     }
 
     public void computeNextPlayerAction(PlayerAction playerAction) {
@@ -115,6 +131,16 @@ public class BotService {
                                 .comparing(item -> getDistanceBetween(bot, item)))
                         .collect(Collectors.toList());
 
+                // check nearest teleporter aligned with bot's teleporterheading
+                List<GameObject> teleporterList = gameObjects.stream()
+                        .filter(item -> item.getGameObjectType() == ObjectTypes.TELEPORTER
+                                && item.currentHeading == currentTeleporterHeading)
+                        .sorted(Comparator
+                                .comparing(item -> getDistanceBetween(bot, item)))
+                        .collect(Collectors.toList());
+                if (teleporterList.size() <= 0 && isTeleporterActive()) {
+                    removeCurrentTeleporter();
+                }
                 // List of heading range restriction
                 // List<DegreeRange> headRestric = new ArrayList<>();
                 DegreeRestriction headingRestriction = new DegreeRestriction();
@@ -203,14 +229,6 @@ public class BotService {
                 boolean strategied = false;
                 boolean chase = false;
 
-                // use teleporter
-                if (!strategied && bot.hasTeleporter() && opponents.get(0).getSize() < bot.getSize() - 25) {
-                    playerAction.action = PlayerActions.FIRETELEPORT;
-                    playerAction.heading = headingToOpp;
-                    System.out.println("FIREEEE TELEPORTERRRRRRRRRRRRR");
-                    strategied = true;
-                }
-
                 // FIRST PRIORITY : if could use torpedoes, FIRE TORPEDOES
                 if (!strategied && bot.hasTorpedo()
                         && bot.getSize() > 50
@@ -251,6 +269,30 @@ public class BotService {
                     chase = true;
                 }
                 // System.out.println("PASSED USE AFTERBURNER CHECK");
+
+                // use teleporter (teleporter not deployed)
+                if (!strategied && bot.hasTeleporter() && !isTeleporterActive()
+                        && opponents.get(0).getSize() < bot.getSize() - 25
+                        && distanceToOpp < 60) {
+                    playerAction.action = PlayerActions.FIRETELEPORT;
+                    playerAction.heading = headingToOpp;
+                    System.out.println("FIREEEE TELEPORTERRRRRRRRRRRRR");
+                    strategied = true;
+                }
+                // use teleporter (teleporter deployed)
+                if (!strategied && isTeleporterActive()) {
+                    GameObject botTeleporter = teleporterList.get(0);
+                    if (bot.getSize() > opponents.get(0).getSize() &&
+                            getDistanceBetween(botTeleporter, opponents.get(0)) - bot.getSize()
+                                    - opponents.get(0).getSize() < 5) {
+                        playerAction.action = PlayerActions.TELEPORT;
+                        playerAction.heading = headingToOpp;
+                        System.out.println("TELEPORT~~~");
+                    }
+                }
+
+                // if there is teleporter that near the nearest opponent and opponent smaller
+                // than bot, teleport!
 
                 // ELSE,
                 if (!strategied) {
@@ -363,6 +405,7 @@ public class BotService {
                         }
                     }
                 }
+
                 // System.out.println("PASSED SHIELD CHECK");
 
                 // if (1.2*opponents.get(0).getSize() < bot.getSize() &&
@@ -404,7 +447,13 @@ public class BotService {
                     playerAction.action = PlayerActions.STOPAFTERBURNER;
                     System.out.println("ACTION  : STOPPING AFTER BURNER");
                 }
-
+                // FINAL CHECK (TELEPORTER HEADING)
+                if (playerAction.action == PlayerActions.FIRETELEPORT) {
+                    saveTeleporterHeading(playerAction.heading);
+                }
+                if (playerAction.action == PlayerActions.TELEPORT) {
+                    removeCurrentTeleporter();
+                }
                 // info
 
                 // System.out.println("Dist to opp : " + getDistanceBetween(opponents.get(0),
