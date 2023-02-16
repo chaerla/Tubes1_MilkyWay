@@ -204,19 +204,19 @@ public class BotService {
                 boolean chase = false;
 
                 // use teleporter
-                if (!strategied && bot.hasTeleporter() && opponents.get(0).getSize() < bot.getSize() - 25) {
-                    playerAction.action = PlayerActions.FIRETELEPORT;
-                    playerAction.heading = headingToOpp;
-                    System.out.println("FIREEEE TELEPORTERRRRRRRRRRRRR");
-                    strategied = true;
-                }
+                // if (!strategied && bot.hasTeleporter() && opponents.get(0).getSize() < bot.getSize() - 25) {
+                //     playerAction.action = PlayerActions.FIRETELEPORT;
+                //     playerAction.heading = headingToOpp;
+                //     System.out.println("FIREEEE TELEPORTERRRRRRRRRRRRR");
+                //     strategied = true;
+                // }
 
                 // FIRST PRIORITY : if could use torpedoes, FIRE TORPEDOES
                 if (!strategied && bot.hasTorpedo()
                         && bot.getSize() > 50
                         && (((foodList.size() + bot.getSize() < opponents.get(0).getSize())
                                 && distanceToOpp < world.getRadius() * 0.6)
-                                || (opponents.get(0).getSize() < bot.getSize() - bot.torpedoSalvoCount * 10
+                                || (opponents.get(0).getSize() < bot.getSize() - bot.torpedoSalvoCount * 5
                                         && (distanceToOpp < 75)))) {
                     System.out.println("FIRING TORPEDOES");
                     playerAction.action = PlayerActions.FIRETORPEDOES;
@@ -227,28 +227,36 @@ public class BotService {
                             && (bot.getSize() - (distanceToOpp / (checkEffect(Effects.IsAfterburner) ? bot.getSpeed()
                                     : 2 * bot.getSpeed())) > opponents.get(0).getSize() * 1.25)
                             && distanceToOpp < world.getRadius() * 0.8) {
+                                if(bot.torpedoSalvoCount <= 3){
+                                    playerAction.action = PlayerActions.FORWARD;
+                                    playerAction.heading = headingToOpp;
+                                }
                         chase = true;
                     }
                 }
                 // System.out.println("PASSED USE TORPEDO CHECK");
 
                 // SECOND PRIORITY : if could chase, CHASE!!
-                if (!strategied && degreeValid
+                if (!strategied
                         && (bot.getSize() - (distanceToOpp / (checkEffect(Effects.IsAfterburner) ? bot.getSpeed()
                                 : 2 * bot.getSpeed())) > opponents.get(0).getSize() * 1.25)
                         && distanceToOpp < world.getRadius() * 0.8) {
                     System.out.println("USING AFTERBURNER");
-                    if (!checkEffect(Effects.IsAfterburner)) {
+                    if (!checkEffect(Effects.IsAfterburner) && degreeValid) {
+                        playerAction.heading = headingToOpp;
                         playerAction.action = PlayerActions.STARTAFTERBURNER;
+                        strategied = true;
+                        chase = true;
+                    } else if (checkEffect(Effects.IsAfterburner)) {
+                        System.out.println("CHASING AFTER AFTERBURNER ACTIVATED");
                         playerAction.heading = headingToOpp;
-                    } else {
                         playerAction.action = PlayerActions.FORWARD;
-                        playerAction.heading = headingToOpp;
+                        strategied = true;
+                        chase = true;
                     }
                     // playerAction.heading = headingToOpp;
                     // playerAction.action = PlayerActions.FORWARD;
-                    strategied = true;
-                    chase = true;
+
                 }
                 // System.out.println("PASSED USE AFTERBURNER CHECK");
 
