@@ -200,22 +200,20 @@ public class BotService {
 
                 // FIRST PRIORITY : if could use torpedoes, FIRE TORPEDOES
                 if (!strategied && bot.hasTorpedo()
-                        && ((bot.getSize() > 50 && (foodList.size()*3/2 + bot.getSize() < opponents.get(0).getSize())) || opponents.get(0).getSize() < bot.getSize() - bot.torpedoSalvoCount*10)
-                        && (distanceToOpp < 75)
-                        ) {
+                        && bot.getSize() > 50 && (((foodList.size() + bot.getSize() < opponents.get(0).getSize()) && distanceToOpp < world.getRadius() * 0.6) || (opponents.get(0).getSize() < bot.getSize() - bot.torpedoSalvoCount*10 &&(distanceToOpp < 75)))) {
                     System.out.println("FIRING TORPEDOES");
                     playerAction.action = PlayerActions.FIRETORPEDOES;
                     playerAction.heading = headingToOpp;
                     // playerAction.action = PlayerActions.FORWARD;
                     strategied = true;
-                    if (checkEffect(Effects.IsAfterburner) && (bot.getSize() - (distanceToOpp / (checkEffect(Effects.IsAfterburner) ? bot.getSpeed() : 2*bot.getSpeed())) > opponents.get(0).getSize()*1.25)){
+                    if (checkEffect(Effects.IsAfterburner) && (bot.getSize() - (distanceToOpp / (checkEffect(Effects.IsAfterburner) ? bot.getSpeed() : 2*bot.getSpeed())) > opponents.get(0).getSize()*1.25) && distanceToOpp < world.getRadius() * 0.8){
                         chase = true;
                     }
                 }
                 // System.out.println("PASSED USE TORPEDO CHECK");
 
                 // SECOND PRIORITY : if could chase, CHASE!!
-                if (!strategied && degreeValid && (bot.getSize() - (distanceToOpp / (checkEffect(Effects.IsAfterburner) ? bot.getSpeed() : 2*bot.getSpeed())) > opponents.get(0).getSize()*1.25)) {
+                if (!strategied && degreeValid && (bot.getSize() - (distanceToOpp / (checkEffect(Effects.IsAfterburner) ? bot.getSpeed() : 2*bot.getSpeed())) > opponents.get(0).getSize()*1.25) && distanceToOpp < world.getRadius() * 0.8) {
                     System.out.println("USING AFTERBURNER");
                     if (!checkEffect(Effects.IsAfterburner)) {
                         playerAction.action = PlayerActions.STARTAFTERBURNER;
