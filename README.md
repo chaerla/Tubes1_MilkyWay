@@ -1,4 +1,4 @@
-# Galaxio-MilkyWay
+# Tubes1_MilkyWay
 This repository contains code for a starter bot named MilkyBot for Galaxio 2021 game. The bot is made for Algorithm Strategies task.
 
 ## Authors
