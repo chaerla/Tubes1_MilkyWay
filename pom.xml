@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.example</groupId>
-    <artifactId>MilkyBotV3</artifactId>
+    <artifactId>MilkyWay</artifactId>
     <version>1.0-SNAPSHOT</version>
 		
     <build>
-        <finalName>MilkyBotV3</finalName>
+        <finalName>MilkyWay</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
