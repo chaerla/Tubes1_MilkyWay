@@ -177,8 +177,7 @@ public class BotService {
             // ****************************************
             // FIND NEAREST OPPONENT
             GameObject nearestOpp = opponentsByDist.get(0);
-            double distToNearestOpp = getDistanceBetween(bot, nearestOpp) - bot.getSize()
-                    - nearestOpp.getSize();
+            double distToNearestOpp = getDistanceBetween(bot, nearestOpp);
             int headToNearestOpp = getHeadingBetween(nearestOpp);
 
             // initialize boolean for strategy
