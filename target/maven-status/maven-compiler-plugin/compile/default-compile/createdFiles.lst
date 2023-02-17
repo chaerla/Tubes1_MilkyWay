@@ -6,6 +6,7 @@ Services\BotService.class
 Enums\ObjectTypes.class
 Models\GameStateDto.class
 Models\PlayerAction.class
+Models\DegreeRestriction.class
 Models\GameObject.class
 Models\Position.class
 Models\World.class
