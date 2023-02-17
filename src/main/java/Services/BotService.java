@@ -58,6 +58,7 @@ public class BotService {
             
             // sort opponent by distance and by size with bot
             opponentsByDist.stream().sorted(Comparator.comparing(item -> getDistanceBetween(bot, item)));
+            
             opponentsBySize = opponentsByDist.stream().sorted(Comparator.comparing(item -> getDistanceBetween(bot, item))).toList();
 
             // check nearest food with bot
