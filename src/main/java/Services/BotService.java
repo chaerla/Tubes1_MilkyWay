@@ -58,306 +58,305 @@ public class BotService {
             opponentsByDist = players;
             opponentsByDist.removeIf(x -> x.getId().equals(bot.getId()));
             
-            if (!gameState.getGameObjects().isEmpty()) {
-                // sort opponent by distance and by size with bot
-                opponentsByDist.stream().sorted(Comparator.comparing(item -> getDistanceBetween(bot, item)));
-                opponentsBySize = opponentsByDist.stream().sorted(Comparator.comparing(item -> getDistanceBetween(bot, item))).toList();
+            // sort opponent by distance and by size with bot
+            opponentsByDist.stream().sorted(Comparator.comparing(item -> getDistanceBetween(bot, item)));
+            opponentsBySize = opponentsByDist.stream().sorted(Comparator.comparing(item -> getDistanceBetween(bot, item))).toList();
 
-                // check nearest food with bot
-                List<GameObject> foodList = gameObjects.stream()
-                        .filter(item -> item.getGameObjectType() == ObjectTypes.FOOD)
-                        .sorted(Comparator
-                                .comparing(item -> getDistanceBetween(bot, item)))
-                        .collect(Collectors.toList());
+            // check nearest food with bot
+            List<GameObject> foodList = gameObjects.stream()
+                    .filter(item -> item.getGameObjectType() == ObjectTypes.FOOD)
+                    .sorted(Comparator
+                            .comparing(item -> getDistanceBetween(bot, item)))
+                    .collect(Collectors.toList());
 
-                // check nearest wormhole
-                List<GameObject> wormholeList = gameObjects.stream()
-                        .filter(item -> item.getGameObjectType() == ObjectTypes.WORMHOLE)
-                        .sorted(Comparator
-                                .comparing(item -> getDistanceBetween(bot, item)))
-                        .collect(Collectors.toList());
+            // check nearest wormhole
+            List<GameObject> wormholeList = gameObjects.stream()
+                    .filter(item -> item.getGameObjectType() == ObjectTypes.WORMHOLE)
+                    .sorted(Comparator
+                            .comparing(item -> getDistanceBetween(bot, item)))
+                    .collect(Collectors.toList());
 
-                // check nearest gasCloud
-                List<GameObject> gasCloudList = gameObjects.stream()
-                        .filter(item -> item.getGameObjectType() == ObjectTypes.GASCLOUD)
-                        .sorted(Comparator
-                                .comparing(item -> getDistanceBetween(bot, item)))
-                        .collect(Collectors.toList());
+            // check nearest gasCloud
+            List<GameObject> gasCloudList = gameObjects.stream()
+                    .filter(item -> item.getGameObjectType() == ObjectTypes.GASCLOUD)
+                    .sorted(Comparator
+                            .comparing(item -> getDistanceBetween(bot, item)))
+                    .collect(Collectors.toList());
 
-                // check nearest asteroidField
-                List<GameObject> asteroidList = gameObjects.stream()
-                        .filter(item -> item.getGameObjectType() == ObjectTypes.ASTEROIDFIELD)
-                        .sorted(Comparator
-                                .comparing(item -> getDistanceBetween(bot, item)))
-                        .collect(Collectors.toList());
+            // check nearest asteroidField
+            List<GameObject> asteroidList = gameObjects.stream()
+                    .filter(item -> item.getGameObjectType() == ObjectTypes.ASTEROIDFIELD)
+                    .sorted(Comparator
+                            .comparing(item -> getDistanceBetween(bot, item)))
+                    .collect(Collectors.toList());
 
-                // check nearest asteroidField
-                List<GameObject> torpedoList = gameObjects.stream()
-                        .filter(item -> item.getGameObjectType() == ObjectTypes.TORPEDOSALVO)
-                        .sorted(Comparator
-                                .comparing(item -> getDistanceBetween(bot, item)))
-                        .collect(Collectors.toList());
+            // check nearest asteroidField
+            List<GameObject> torpedoList = gameObjects.stream()
+                    .filter(item -> item.getGameObjectType() == ObjectTypes.TORPEDOSALVO)
+                    .sorted(Comparator
+                            .comparing(item -> getDistanceBetween(bot, item)))
+                    .collect(Collectors.toList());
 
-                // check nearest super food with bot
-                List<GameObject> superFoodList = gameObjects.stream()
-                        .filter(item -> item.getGameObjectType() == ObjectTypes.SUPERFOOD)
-                        .sorted(Comparator
-                                .comparing(item -> getDistanceBetween(bot, item)))
-                        .collect(Collectors.toList());
+            // check nearest super food with bot
+            List<GameObject> superFoodList = gameObjects.stream()
+                    .filter(item -> item.getGameObjectType() == ObjectTypes.SUPERFOOD)
+                    .sorted(Comparator
+                            .comparing(item -> getDistanceBetween(bot, item)))
+                    .collect(Collectors.toList());
 
-                // check nearest teleporter aligned with bot's teleporterheading
-                List<GameObject> teleporterList = gameObjects.stream()
-                        .filter(item -> item.getGameObjectType() == ObjectTypes.TELEPORTER)
-                        .sorted(Comparator
-                                .comparing(item -> getDistanceBetween(bot, item)))
-                        .collect(Collectors.toList());
-                // food by heading gap
-                List<GameObject> foodListByHeadingGap = gameObjects.stream()
-                        .filter(item -> item.getGameObjectType() == ObjectTypes.FOOD)
-                        .sorted(Comparator
-                                .comparing(item -> heading_gap(bot.currentHeading, item.currentHeading)))
-                        .collect(Collectors.toList());
+            // check nearest teleporter aligned with bot's teleporterheading
+            List<GameObject> teleporterList = gameObjects.stream()
+                    .filter(item -> item.getGameObjectType() == ObjectTypes.TELEPORTER)
+                    .sorted(Comparator
+                            .comparing(item -> getDistanceBetween(bot, item)))
+                    .collect(Collectors.toList());
+            // food by heading gap
+            List<GameObject> foodListByHeadingGap = gameObjects.stream()
+                    .filter(item -> item.getGameObjectType() == ObjectTypes.FOOD)
+                    .sorted(Comparator
+                            .comparing(item -> heading_gap(bot.currentHeading, item.currentHeading)))
+                    .collect(Collectors.toList());
 
 
-                // update activeTeleporterHeading
-                activeTeleporterHeadings.clear();
-                for (int i = 0; i < teleporterList.size(); i++) {       
-                    activeTeleporterHeadings.add(teleporterList.get(i).currentHeading);
+            // update activeTeleporterHeading
+            activeTeleporterHeadings.clear();
+            for (int i = 0; i < teleporterList.size(); i++) {       
+                activeTeleporterHeadings.add(teleporterList.get(i).currentHeading);
+            }
+            
+            // List of heading range restriction
+            DegreeRestriction headingRestriction = new DegreeRestriction();
+
+            // check if is in asteroid field
+            if (asteroidList.size() > 0) {
+                if (checkEffect(Effects.InAsteroidField)
+                        || getDistanceBetween(asteroidList.get(0), bot) - bot.getSize()
+                                - asteroidList.get(0).getSize() <= 20) {
+                    int headingToAsteroid = getHeadingBetween(asteroidList.get(0));
+                    headingRestriction.restrictRange(headingToAsteroid, getDeltaHeading(asteroidList.get(0)));
+
+                    System.out.println("DETECTED    : NEAR THE ASTEROID with distance "
+                            + getDistanceBetween(bot, asteroidList.get(0)));
+                    System.out.println("    Asteroid Size   : " + asteroidList.get(0).getSize());
                 }
-                
-                // List of heading range restriction
-                DegreeRestriction headingRestriction = new DegreeRestriction();
+            }
 
-                // check if is in asteroid field
-                if (asteroidList.size() > 0) {
-                    if (checkEffect(Effects.InAsteroidField)
-                            || getDistanceBetween(asteroidList.get(0), bot) - bot.getSize()
-                                    - asteroidList.get(0).getSize() <= 20) {
-                        int headingToAsteroid = getHeadingBetween(asteroidList.get(0));
-                        headingRestriction.restrictRange(headingToAsteroid, getDeltaHeading(asteroidList.get(0)));
+            // check if is in wormhole field
+            if (wormholeList.size() > 0) {
+                if (getDistanceBetween(wormholeList.get(0), bot) <= 20) {
+                    int headingToWormhole = getHeadingBetween(wormholeList.get(0));
+                    headingRestriction.restrictRange(headingToWormhole, getDeltaHeading(wormholeList.get(0)));
 
-                        System.out.println("DETECTED    : NEAR THE ASTEROID with distance "
-                                + getDistanceBetween(bot, asteroidList.get(0)));
-                        System.out.println("    Asteroid Size   : " + asteroidList.get(0).getSize());
+                    System.out.println("DETECTED    : NEAR THE WORMHOLE with distance "
+                            + getDistanceBetween(bot, wormholeList.get(0)));
+                    System.out.println("    Wormhole Size   : " + wormholeList.get(0).getSize());
+                }
+            }
+
+            // check if near gas cloud
+            if (gasCloudList.size() > 0) {
+                if (checkEffect(Effects.InGasCloud)
+                        || getDistanceBetween(gasCloudList.get(0), bot) - bot.getSize()
+                                - gasCloudList.get(0).getSize() <= 20) {
+                    int headingToGasCloud = getHeadingBetween(gasCloudList.get(0));
+                    headingRestriction.restrictRange(headingToGasCloud, getDeltaHeading(gasCloudList.get(0)));
+
+                    System.out.println("DETECTED    : NEAR THE GAS CLOUD with distance "
+                            + getDistanceBetween(bot, gasCloudList.get(0)));
+                    System.out.println("    GasCloud Size   : " + gasCloudList.get(0).getSize());
+                }
+            }
+
+            // check distance and heading of bot to nearest opponent
+            double distToNearestOpp = getDistanceBetween(bot, opponentsByDist.get(0)) - bot.getSize()
+                    - opponentsByDist.get(0).getSize();
+            int headToNearestOpp = getHeadingBetween(opponentsByDist.get(0));
+
+            // initialize boolean for strategy
+            boolean strategied = false;
+            boolean chase = false;
+
+            // FIRST PRIORITY (A) : fire teleporter (teleporter not deployed)
+            if (!strategied && bot.hasTeleporter()) {
+                int oppIndex = -1;
+                for (int i = 0; i < opponentsBySize.size(); i++) {
+                    if (opponentsBySize.get(i).getSize() < bot.getSize() - 30 && bot.getSize() > 60 && world.getCurrentTick() - tickTorpedoShot > 50) {
+                        oppIndex = i;
+                        break;
+                    } else if (opponentsBySize.get(i).getSize() > bot.getSize()) {
+                        break;
                     }
                 }
-
-                // check if is in wormhole field
-                if (wormholeList.size() > 0) {
-                    if (getDistanceBetween(wormholeList.get(0), bot) <= 20) {
-                        int headingToWormhole = getHeadingBetween(wormholeList.get(0));
-                        headingRestriction.restrictRange(headingToWormhole, getDeltaHeading(wormholeList.get(0)));
-
-                        System.out.println("DETECTED    : NEAR THE WORMHOLE with distance "
-                                + getDistanceBetween(bot, wormholeList.get(0)));
-                        System.out.println("    Wormhole Size   : " + wormholeList.get(0).getSize());
-                    }
-                }
-
-                // check if near gas cloud
-                if (gasCloudList.size() > 0) {
-                    if (checkEffect(Effects.InGasCloud)
-                            || getDistanceBetween(gasCloudList.get(0), bot) - bot.getSize()
-                                    - gasCloudList.get(0).getSize() <= 20) {
-                        int headingToGasCloud = getHeadingBetween(gasCloudList.get(0));
-                        headingRestriction.restrictRange(headingToGasCloud, getDeltaHeading(gasCloudList.get(0)));
-
-                        System.out.println("DETECTED    : NEAR THE GAS CLOUD with distance "
-                                + getDistanceBetween(bot, gasCloudList.get(0)));
-                        System.out.println("    GasCloud Size   : " + gasCloudList.get(0).getSize());
-                    }
-                }
-
-                // check distance and heading of bot to nearest opponent
-                double distToNearestOpp = getDistanceBetween(bot, opponentsByDist.get(0)) - bot.getSize()
-                        - opponentsByDist.get(0).getSize();
-                int headToNearestOpp = getHeadingBetween(opponentsByDist.get(0));
-
-                // initialize boolean for strategy
-                boolean strategied = false;
-                boolean chase = false;
-
-                // FIRST PRIORITY (A) : fire teleporter (teleporter not deployed)
-                if (!strategied && bot.hasTeleporter()) {
-                    int oppIndex = -1;
-                    for (int i = 0; i < opponentsBySize.size(); i++) {
-                        if (opponentsBySize.get(i).getSize() < bot.getSize() - 30 && bot.getSize() > 60 && world.getCurrentTick() - tickTorpedoShot > 50) {
-                            oppIndex = i;
-                            break;
-                        } else if (opponentsBySize.get(i).getSize() > bot.getSize()) {
-                            break;
-                        }
-                    }
-                    if (oppIndex != -1) {
-                        playerAction.heading = getHeadingBetween(opponentsBySize.get(0));
-                        playerAction.action = PlayerActions.FIRETELEPORT;
-                        strategied = true;
-                    }
-                }
-
-                // FIRST PRIORITY (B) : use teleporter (teleporter deployed)
-                if (!strategied) {
-                    Boolean foundValidTarget = false;
-                    for (GameObject tele : teleporterList) {
-                        for (GameObject opponent : opponentsBySize) {
-                            if (getDistanceBetween(opponent, tele) < (bot.getSize() + opponent.getSize()) * 1.1 && bot.getSize() > opponent.getSize()) {
-                                playerAction.heading = getHeadingBetween(opponent);
-                                playerAction.action = PlayerActions.TELEPORT;
-                                System.out.println("TELEPORT~~~");
-                                strategied = true;
-                                foundValidTarget = true;
-                                break;
-                            }
-                        }
-                        if (foundValidTarget) {
-                            break;
-                        }
-                    }
-                }
-
-                // SECOND PRIORITY : if could use torpedoes, FIRE TORPEDOES
-                if (!strategied && bot.hasTorpedo()
-                        && bot.getSize() > 50
-                        && (((foodList.size() + bot.getSize() < opponentsByDist.get(0).getSize())
-                                && distToNearestOpp < world.getRadius() * 0.4)
-                                || (opponentsByDist.get(0).getSize() < bot.getSize() - bot.torpedoSalvoCount * 10
-                                       && distToNearestOpp < world.getRadius() * 1.2 )|| (distToNearestOpp < 75))) {
-                    System.out.println("FIRING TORPEDOES");
-                    playerAction.heading = headToNearestOpp;
-                    playerAction.action = PlayerActions.FIRETORPEDOES;
+                if (oppIndex != -1) {
+                    playerAction.heading = getHeadingBetween(opponentsBySize.get(0));
+                    playerAction.action = PlayerActions.FIRETELEPORT;
                     strategied = true;
-                    if (checkEffect(Effects.IsAfterburner)
-                            && (bot.getSize() - (distToNearestOpp/bot.getSpeed()) > opponentsByDist.get(0).getSize()) && distToNearestOpp < world.getRadius() * 0.8) {
-                        if(bot.torpedoSalvoCount <= 3){
-                            playerAction.heading = headToNearestOpp;
-                            playerAction.action = PlayerActions.FORWARD;
+                }
+            }
+
+            // FIRST PRIORITY (B) : use teleporter (teleporter deployed)
+            if (!strategied) {
+                Boolean foundValidTarget = false;
+                for (GameObject tele : teleporterList) {
+                    for (GameObject opponent : opponentsBySize) {
+                        if (getDistanceBetween(opponent, tele) < (bot.getSize() + opponent.getSize()) * 1.1 && bot.getSize() > opponent.getSize()) {
+                            playerAction.heading = getHeadingBetween(opponent);
+                            playerAction.action = PlayerActions.TELEPORT;
+                            System.out.println("TELEPORT~~~");
+                            strategied = true;
+                            foundValidTarget = true;
+                            break;
                         }
-                        chase = true;
+                    }
+                    if (foundValidTarget) {
+                        break;
                     }
                 }
-                
-                // THIRD PRIORITY : if could chase, CHASE!!
-                if (!strategied && (bot.getSize() - (distToNearestOpp/bot.getSpeed()) > opponentsByDist.get(0).getSize()*1.2) && distToNearestOpp < world.getRadius() * 0.8) {
-                    System.out.println("USING AFTERBURNER");
-                    if (!checkEffect(Effects.IsAfterburner)) {
-                        playerAction.heading = headToNearestOpp;
-                        playerAction.action = PlayerActions.STARTAFTERBURNER;
-                    } else {
+            }
+
+            // SECOND PRIORITY : if could use torpedoes, FIRE TORPEDOES
+            if (!strategied && bot.hasTorpedo()
+                    && bot.getSize() > 50
+                    && (((foodList.size() + bot.getSize() < opponentsByDist.get(0).getSize())
+                            && distToNearestOpp < world.getRadius() * 0.4)
+                            || (opponentsByDist.get(0).getSize() < bot.getSize() - bot.torpedoSalvoCount * 10
+                                    && distToNearestOpp < world.getRadius() * 1.2 )|| (distToNearestOpp < 75))) {
+                System.out.println("FIRING TORPEDOES");
+                playerAction.heading = headToNearestOpp;
+                playerAction.action = PlayerActions.FIRETORPEDOES;
+                strategied = true;
+                if (checkEffect(Effects.IsAfterburner)
+                        && (bot.getSize() - (distToNearestOpp/bot.getSpeed()) > opponentsByDist.get(0).getSize()) && distToNearestOpp < world.getRadius() * 0.8) {
+                    if(bot.torpedoSalvoCount <= 3){
                         playerAction.heading = headToNearestOpp;
                         playerAction.action = PlayerActions.FORWARD;
                     }
-                    strategied = true;
                     chase = true;
                 }
+            }
+            
+            // THIRD PRIORITY : if could chase, CHASE!!
+            if (!strategied && (bot.getSize() - (distToNearestOpp/bot.getSpeed()) > opponentsByDist.get(0).getSize()*1.2) && distToNearestOpp < world.getRadius() * 0.8) {
+                System.out.println("USING AFTERBURNER");
+                if (!checkEffect(Effects.IsAfterburner)) {
+                    playerAction.heading = headToNearestOpp;
+                    playerAction.action = PlayerActions.STARTAFTERBURNER;
+                } else {
+                    playerAction.heading = headToNearestOpp;
+                    playerAction.action = PlayerActions.FORWARD;
+                }
+                strategied = true;
+                chase = true;
+            }
 
-                // LAST PRIORITY : FARMING,
-                if (!strategied) {
-                    for (GameObject opponent : opponentsByDist) {
-                        if (getDistanceBetween(bot, opponent) < 100 && bot.getSize() < opponent.getSize()) {
-                            int headingToThisOpp = getHeadingBetween(opponent);
-                            headingRestriction.restrictRange(headingToThisOpp, getDeltaHeading(opponent));
-                            System.out.println(
-                                    "DETECTED    : OPPONENT with distance " + getDistanceBetween(bot, opponent));
-                        }
+            // LAST PRIORITY : FARMING,
+            if (!strategied) {
+                for (GameObject opponent : opponentsByDist) {
+                    if (getDistanceBetween(bot, opponent) < 100 && bot.getSize() < opponent.getSize()) {
+                        int headingToThisOpp = getHeadingBetween(opponent);
+                        headingRestriction.restrictRange(headingToThisOpp, getDeltaHeading(opponent));
+                        System.out.println(
+                                "DETECTED    : OPPONENT with distance " + getDistanceBetween(bot, opponent));
                     }
+                }
 
-                    int heading = -1;
+                int heading = -1;
 
-                    // check possible food
-                    int indexFood = -1;
-                    for (int i = 0; i < foodList.size(); i++) {
-                        if (headingRestriction.isDegValid(getHeadingBetween(foodList.get(i)))) {
-                            indexFood = i;
+                // check possible food
+                int indexFood = -1;
+                for (int i = 0; i < foodList.size(); i++) {
+                    if (headingRestriction.isDegValid(getHeadingBetween(foodList.get(i)))) {
+                        indexFood = i;
+                        break;
+                    }
+                }
+
+                // check possible superfood
+                int indexSuperFood = -1;
+                if (!checkEffect(Effects.HasSuperfood)) {
+                    for (int i = 0; i < superFoodList.size(); i++) {
+                        if (headingRestriction.isDegValid(getHeadingBetween(superFoodList.get(i)))) {
+                            indexSuperFood = i;
                             break;
                         }
                     }
+                }
 
-                    // check possible superfood
-                    int indexSuperFood = -1;
-                    if (!checkEffect(Effects.HasSuperfood)) {
-                        for (int i = 0; i < superFoodList.size(); i++) {
-                            if (headingRestriction.isDegValid(getHeadingBetween(superFoodList.get(i)))) {
-                                indexSuperFood = i;
-                                break;
-                            }
-                        }
+                // check food with closest heading gap
+                for (int i = 0; i < foodListByHeadingGap.size(); i++) {
+                    GameObject currFood = foodListByHeadingGap.get(i);
+                    if (headingRestriction.isDegValid(getHeadingBetween(currFood)) && Math.abs(getDistanceBetween(bot, foodList.get(indexFood)) - getDistanceBetween(currFood, bot)) <= 2) {
+                        indexFood = foodList.indexOf(foodList.stream().filter(item -> item.currentHeading == currFood.currentHeading).findFirst().orElse(null));
+                        break;
                     }
+                }
 
-                    // check food with closest heading gap
-                    for (int i = 0; i < foodListByHeadingGap.size(); i++) {
-                        GameObject currFood = foodListByHeadingGap.get(i);
-                        if (headingRestriction.isDegValid(getHeadingBetween(currFood)) && Math.abs(getDistanceBetween(bot, foodList.get(indexFood)) - getDistanceBetween(currFood, bot)) <= 2) {
-                            indexFood = foodList.indexOf(foodList.stream().filter(item -> item.currentHeading == currFood.currentHeading).findFirst().orElse(null));
-                            break;
-                        }
-                    }
-
-                    // check whether goes to food or superfood
-                    if (indexFood != -1 && indexSuperFood != -1) {
-                        if (getDistanceBetween(bot, foodList.get(indexFood)) * 1.5 >= getDistanceBetween(bot,
-                                superFoodList.get(indexSuperFood))) {
-                            // go to superfood
-                            heading = getHeadingBetween(superFoodList.get(indexSuperFood));
-                            System.out.println("ACTION      : GO TO SUPERFOOD");
-                        } else {
-                            // go to food
-                            heading = getHeadingBetween(foodList.get(indexFood));
-                            System.out.println("ACTION      : GO TO FOOD");
-                        }
-                    } else if (indexFood != -1) {
-                        heading = getHeadingBetween(foodList.get(indexFood));
-                        System.out.println("ACTION      : GO TO FOOD");
-                    } else if (indexSuperFood != -1) {
+                // check whether goes to food or superfood
+                if (indexFood != -1 && indexSuperFood != -1) {
+                    if (getDistanceBetween(bot, foodList.get(indexFood)) * 1.5 >= getDistanceBetween(bot,
+                            superFoodList.get(indexSuperFood))) {
+                        // go to superfood
                         heading = getHeadingBetween(superFoodList.get(indexSuperFood));
                         System.out.println("ACTION      : GO TO SUPERFOOD");
                     } else {
-                        heading = headingRestriction.getNearestValidHeading(bot.currentHeading, 1);
+                        // go to food
+                        heading = getHeadingBetween(foodList.get(indexFood));
+                        System.out.println("ACTION      : GO TO FOOD");
                     }
-
-                    playerAction.heading = heading;
-                    playerAction.action = PlayerActions.FORWARD;
+                } else if (indexFood != -1) {
+                    heading = getHeadingBetween(foodList.get(indexFood));
+                    System.out.println("ACTION      : GO TO FOOD");
+                } else if (indexSuperFood != -1) {
+                    heading = getHeadingBetween(superFoodList.get(indexSuperFood));
+                    System.out.println("ACTION      : GO TO SUPERFOOD");
+                } else {
+                    heading = headingRestriction.getNearestValidHeading(bot.currentHeading, 1);
                 }
 
-                // use shield as defense
-                if (torpedoList.size() > 0) {
-                    int torpedoHeading = torpedoList.get(0).currentHeading;
-                    if (bot.hasShield() && !checkEffect(Effects.HasShield)
-                            && (getDistanceBetween(bot, torpedoList.get(0)) < bot.getSize() + 50)
-                            && heading_gap(getHeadingBetween(opponentsByDist.get(0)), torpedoHeading) > 5
-                            && torpedoList.get(0).getSize() >= 2
-                            && bot.getSize() > 50
-                            && bot.getSize() < 350
-                            ) {
-                        playerAction.action = PlayerActions.ACTIVATESHIELD;
-                        System.out.println("ACTIVAAATEEE SHEIEEKDLD");
-                    }
-                }
-
-                // counter the wall
-                if (!((Math.pow(bot.getPosition().x, 2) + Math.pow(bot.getPosition().y,
-                        2)) < Math.pow(0.9 * (gameState.getWorld().getRadius() - bot.getSize()), 2))
-                        && playerAction.action != PlayerActions.FIRETORPEDOES) {
-                    System.out.println("DETECT  : WALL");
-                    playerAction.action = PlayerActions.FORWARD;
-                    playerAction.heading = getHeadingBetween(world.getCenterPoint());
-                }
-
-                // stop afterburner
-                if (checkEffect(Effects.IsAfterburner) && (!chase || checkEffect(Effects.HasShield) || (getDistanceBetween(opponentsByDist.get(0), bot) < bot.getSize() * 2 && opponentsByDist.get(0).getSize() > bot.getSize()))) {
-                    playerAction.action = PlayerActions.STOPAFTERBURNER;
-                    System.out.println("ACTION  : STOPPING AFTER BURNER");
-                }
-
-                // FINAL CHECK (TELEPORTER HEADING)
-                if (playerAction.action == PlayerActions.FIRETELEPORT) {
-                    tickTorpedoShot = world.getCurrentTick();
-                    saveTeleporterHeading(playerAction.heading);
-                }
-                if (playerAction.action == PlayerActions.TELEPORT) {
-                    removeTeleporterHeading(playerAction.heading);
-                }
-                System.out.println("========================\n");
+                playerAction.heading = heading;
+                playerAction.action = PlayerActions.FORWARD;
             }
+
+            // use shield as defense
+            if (torpedoList.size() > 0) {
+                int torpedoHeading = torpedoList.get(0).currentHeading;
+                if (bot.hasShield() && !checkEffect(Effects.HasShield)
+                        && (getDistanceBetween(bot, torpedoList.get(0)) < bot.getSize() + 50)
+                        && heading_gap(getHeadingBetween(opponentsByDist.get(0)), torpedoHeading) > 5
+                        && torpedoList.get(0).getSize() >= 2
+                        && bot.getSize() > 50
+                        && bot.getSize() < 350
+                        ) {
+                    playerAction.action = PlayerActions.ACTIVATESHIELD;
+                    System.out.println("ACTIVAAATEEE SHEIEEKDLD");
+                }
+            }
+
+            // counter the wall
+            if (!((Math.pow(bot.getPosition().x, 2) + Math.pow(bot.getPosition().y,
+                    2)) < Math.pow(0.9 * (gameState.getWorld().getRadius() - bot.getSize()), 2))
+                    && playerAction.action != PlayerActions.FIRETORPEDOES) {
+                System.out.println("DETECT  : WALL");
+                playerAction.action = PlayerActions.FORWARD;
+                playerAction.heading = getHeadingBetween(world.getCenterPoint());
+            }
+
+            // stop afterburner
+            if (checkEffect(Effects.IsAfterburner) && (!chase || checkEffect(Effects.HasShield) || (getDistanceBetween(opponentsByDist.get(0), bot) < bot.getSize() * 2 && opponentsByDist.get(0).getSize() > bot.getSize()))) {
+                playerAction.action = PlayerActions.STOPAFTERBURNER;
+                System.out.println("ACTION  : STOPPING AFTER BURNER");
+            }
+
+            // FINAL CHECK (TELEPORTER HEADING)
+            if (playerAction.action == PlayerActions.FIRETELEPORT) {
+                tickTorpedoShot = world.getCurrentTick();
+                saveTeleporterHeading(playerAction.heading);
+            }
+            if (playerAction.action == PlayerActions.TELEPORT) {
+                removeTeleporterHeading(playerAction.heading);
+            }
+            System.out.println("========================\n");
+            
         }
         this.playerAction = playerAction;
     }
