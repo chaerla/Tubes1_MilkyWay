@@ -60,7 +60,7 @@ public class Main {
 
         Thread.sleep(1000);
         System.out.println("Registering with the runner...");
-        hubConnection.send("Register", token, "Chow Bot");
+        hubConnection.send("Register", token, "MilkyBotV3");
 
         // This is a blocking call
         hubConnection.start().subscribe(() -> {
