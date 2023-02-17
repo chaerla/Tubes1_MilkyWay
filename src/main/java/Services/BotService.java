@@ -124,13 +124,21 @@ public class BotService {
                             .comparing(item -> headingGap(bot.currentHeading, item.currentHeading)))
                     .collect(Collectors.toList());
 
-            
-                    
-            /* ***** INITIALIZE HEADING RESTRICTIONS -- HANDLE OBSTACLES ***** */ 
-            // list of degree restrictions; prevents bot from entering obstacles in next tick
+            GameObject supernovaPickup = gameObjects.stream()
+                    .filter(item -> item.getGameObjectType() == ObjectTypes.SUPERNOVAPICKUP)
+                    .findFirst().orElse(null);
+
+            GameObject superNovaBomb = gameObjects.stream()
+                    .filter(item -> item.getGameObjectType() == ObjectTypes.SUPERNOVABOMB)
+                    .findFirst().orElse(null);
+
+            /* ***** INITIALIZE HEADING RESTRICTIONS -- HANDLE OBSTACLES ***** */
+            // list of degree restrictions; prevents bot from entering obstacles in next
+            // tick
             DegreeRestriction headingRestriction = new DegreeRestriction();
-                    
-            // check if is in/near asteroid field, RESTRICT HEADINGS TO ASTEROID -- HANDLE ONLY CLOSEST ONE
+
+            // check if is in/near asteroid field, RESTRICT HEADINGS TO ASTEROID -- HANDLE
+            // ONLY CLOSEST ONE
             if (asteroidList.size() > 0) {
                 if (checkEffect(Effects.InAsteroidField)
                         || getDistanceBetween(asteroidList.get(0), bot) - bot.getSize()
@@ -144,7 +152,8 @@ public class BotService {
                 }
             }
 
-            // check if is in/near wormhole, RESTRICT HEADINGS TO WORMHOLE -- HANDLE ONLY CLOSEST ONE
+            // check if is in/near wormhole, RESTRICT HEADINGS TO WORMHOLE -- HANDLE ONLY
+            // CLOSEST ONE
             if (wormholeList.size() > 0) {
                 if (getDistanceBetween(wormholeList.get(0), bot) <= 20) {
                     int headingToWormhole = getHeadingBetween(wormholeList.get(0));
@@ -156,7 +165,8 @@ public class BotService {
                 }
             }
 
-            // check if nis in/near gas cloud, RESTRICT HEADING TO GASCLOUD -- HANDLE ONLY CLOSEST ONE
+            // check if nis in/near gas cloud, RESTRICT HEADING TO GASCLOUD -- HANDLE ONLY
+            // CLOSEST ONE
             if (gasCloudList.size() > 0) {
                 if (checkEffect(Effects.InGasCloud)
                         || getDistanceBetween(gasCloudList.get(0), bot) - bot.getSize()
@@ -170,12 +180,12 @@ public class BotService {
                 }
             }
 
-            /* 
+            /*
              * *********************************************
              *
-             *  GREEDY BY DAMAGE TO OPPONENT
-             *  maximize damage on strategy selection
-             *  
+             * GREEDY BY DAMAGE TO OPPONENT
+             * maximize damage on strategy selection
+             * 
              * *********************************************
              */
             // FIND NEAREST OPPONENT
@@ -188,24 +198,37 @@ public class BotService {
             boolean chase = false;
 
             /* *** STRATEGY SELECTION *** */
+            // FIRE SUPERNOVA
+            if (!strategied && bot.hasSupernova()
+                    && getDistanceBetween(bot, opponentsBySize.get(0)) < 1.2 * world.getRadius()) {
+                playerAction.heading = getHeadingBetween(opponentsBySize.get(0));
+                playerAction.action = PlayerActions.FIRESUPERNOVA;
+            }
             // FIRST PRIORITY (A) : fire teleporter (teleporter not deployed)
             if (!strategied && bot.hasTeleporter()) {
                 int oppIndex = -1;
-                for (int i = 0; i < opponentsBySize.size(); i++) {
-                    if (opponentsBySize.get(i).getSize() < bot.getSize() - (FIRE_TELEPORTER_COST + 10)
-                            && bot.getSize() > FIRE_TELEPORTER_COST * 3
-                            && world.getCurrentTick() - lastTeleporterTick > 50) {
-                        oppIndex = i;
-                        break;
-                    } else if (opponentsBySize.get(i).getSize() > bot.getSize()) {
-                        break;
-                    }
-                }
-                if (oppIndex != -1) {
-                    playerAction.heading = getHeadingBetween(opponentsBySize.get(0));
+                if (supernovaPickup != null) {
+                    playerAction.heading = getHeadingBetween(supernovaPickup);
                     playerAction.action = PlayerActions.FIRETELEPORT;
-                    System.out.println("ACTION  : DEPLOY TELEPORTER??");
+                    System.out.println("ACTION  : DEPLOY TELEPORTER TO SUPERNOVA");
                     strategied = true;
+                } else {
+                    for (int i = 0; i < opponentsBySize.size(); i++) {
+                        if (opponentsBySize.get(i).getSize() < bot.getSize() - (FIRE_TELEPORTER_COST + 10)
+                                && bot.getSize() > FIRE_TELEPORTER_COST * 3
+                                && world.getCurrentTick() - lastTeleporterTick > 50) {
+                            oppIndex = i;
+                            break;
+                        } else if (opponentsBySize.get(i).getSize() > bot.getSize()) {
+                            break;
+                        }
+                    }
+                    if (oppIndex != -1) {
+                        playerAction.heading = getHeadingBetween(opponentsBySize.get(0));
+                        playerAction.action = PlayerActions.FIRETELEPORT;
+                        System.out.println("ACTION  : DEPLOY TELEPORTER??");
+                        strategied = true;
+                    }
                 }
             }
 
@@ -213,6 +236,14 @@ public class BotService {
             if (!strategied) {
                 Boolean foundValidTarget = false;
                 for (GameObject tele : teleporterList) {
+                    if (superNovaBomb != null) {
+                        if (getDistanceBetween(superNovaBomb, tele) < bot.getSize() * 1.1) {
+                            playerAction.heading = getHeadingBetween(tele);
+                            playerAction.action = PlayerActions.TELEPORT;
+                            strategied = true;
+                            break;
+                        }
+                    }
                     for (GameObject opponent : opponentsBySize) {
                         if (getDistanceBetween(opponent, tele) < (bot.getSize() + opponent.getSize()) * 1.1
                                 && bot.getSize() > opponent.getSize()) {
@@ -364,7 +395,8 @@ public class BotService {
                 System.out.println("ACTION  : EVADE WALL??");
             }
 
-            // FUEL CHECK (HIGH PRIORITY): stop afterburner; prevents self destruct from using afterburner
+            // FUEL CHECK (HIGH PRIORITY): stop afterburner; prevents self destruct from
+            // using afterburner
             if (checkEffect(Effects.IsAfterburner) && (!chase || checkEffect(Effects.HasShield)
                     || (getDistanceBetween(opponentsByDist.get(0), bot) < bot.getSize() * 2
                             && opponentsByDist.get(0).getSize() > bot.getSize()))) {
