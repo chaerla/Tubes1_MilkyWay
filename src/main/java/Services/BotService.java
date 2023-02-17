@@ -10,13 +10,11 @@ public class BotService {
     private GameObject bot;
     private PlayerAction playerAction;
     private GameState gameState;
-    private List<Integer> activeTeleporterHeadings;
     private Integer tickTorpedoShot;
 
     public BotService() {
         this.playerAction = new PlayerAction();
         this.gameState = new GameState();
-        this.activeTeleporterHeadings = new ArrayList<Integer>();
         this.tickTorpedoShot = 0;
     }
 
@@ -110,6 +108,7 @@ public class BotService {
                     .sorted(Comparator
                             .comparing(item -> getDistanceBetween(bot, item)))
                     .collect(Collectors.toList());
+                    
             // food by heading gap
             List<GameObject> foodListByHeadingGap = gameObjects.stream()
                     .filter(item -> item.getGameObjectType() == ObjectTypes.FOOD)
@@ -118,11 +117,7 @@ public class BotService {
                     .collect(Collectors.toList());
 
 
-            // update activeTeleporterHeading
-            activeTeleporterHeadings.clear();
-            for (int i = 0; i < teleporterList.size(); i++) {       
-                activeTeleporterHeadings.add(teleporterList.get(i).currentHeading);
-            }
+
             
             // List of heading range restriction
             DegreeRestriction headingRestriction = new DegreeRestriction();
@@ -350,32 +345,11 @@ public class BotService {
             // FINAL CHECK (TELEPORTER HEADING)
             if (playerAction.action == PlayerActions.FIRETELEPORT) {
                 tickTorpedoShot = world.getCurrentTick();
-                saveTeleporterHeading(playerAction.heading);
-            }
-            if (playerAction.action == PlayerActions.TELEPORT) {
-                removeTeleporterHeading(playerAction.heading);
             }
             System.out.println("========================\n");
             
         }
         this.playerAction = playerAction;
-    }
-
-    private void saveTeleporterHeading(Integer teleportHeading) {
-        activeTeleporterHeadings.add(teleportHeading);
-    }
-
-    private void removeTeleporterHeading(Integer teleportHeading) {
-        int teleIndex = -1;
-        for (int i = 0; i < activeTeleporterHeadings.size(); i++) {
-            if (activeTeleporterHeadings.get(i) == teleportHeading) {
-                teleIndex = i;
-                break;
-            }
-        }
-        if (teleIndex != -1) {
-            activeTeleporterHeadings.remove(teleIndex);
-        }
     }
 
     public void printRestrictedDegrees(DegreeRestriction restriction) {
