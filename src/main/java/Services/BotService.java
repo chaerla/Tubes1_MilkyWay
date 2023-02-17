@@ -64,7 +64,8 @@ public class BotService {
             opponentsByDist.stream().sorted(Comparator.comparing(item -> getDistanceBetween(bot, item)));
 
             opponentsBySize = opponentsByDist.stream()
-                    .sorted(Comparator.comparing(item -> getDistanceBetween(bot, item))).toList();
+                    .sorted(Comparator.comparing(item -> getDistanceBetween(bot, item), Comparator.reverseOrder()))
+                    .collect(Collectors.toList());
 
             // check nearest food with bot
             List<GameObject> foodList = gameObjects.stream()
@@ -377,16 +378,15 @@ public class BotService {
         this.playerAction = playerAction;
     }
 
-    
     public GameState getGameState() {
         return this.gameState;
     }
-    
+
     public void setGameState(GameState gameState) {
         this.gameState = gameState;
         updateSelfState();
     }
-    
+
     public int headingGap(int heading1, int heading2) {
         // Normalize headings to the range [0, 360)
         heading1 = heading1 % 360;
@@ -397,7 +397,7 @@ public class BotService {
 
         return gap;
     }
-    
+
     private void updateSelfState() {
         Optional<GameObject> optionalBot = gameState.getPlayerGameObjects().stream()
                 .filter(gameObject -> gameObject.id.equals(bot.id)).findAny();
