@@ -124,13 +124,13 @@ public class BotService {
                             .comparing(item -> headingGap(bot.currentHeading, item.currentHeading)))
                     .collect(Collectors.toList());
 
-            GameObject supernovaPickup = gameObjects.stream()
+            List<GameObject> supernovaPickup = gameObjects.stream()
                     .filter(item -> item.getGameObjectType() == ObjectTypes.SUPERNOVAPICKUP)
-                    .findFirst().orElse(null);
+                    .collect(Collectors.toList());
 
-            GameObject superNovaBomb = gameObjects.stream()
+            List<GameObject> supernovaBomb = gameObjects.stream()
                     .filter(item -> item.getGameObjectType() == ObjectTypes.SUPERNOVABOMB)
-                    .findFirst().orElse(null);
+                    .collect(Collectors.toList());
 
             /* ***** INITIALIZE HEADING RESTRICTIONS -- HANDLE OBSTACLES ***** */
             // list of degree restrictions; prevents bot from entering obstacles in next
@@ -207,8 +207,8 @@ public class BotService {
             // FIRST PRIORITY (A) : fire teleporter (teleporter not deployed)
             if (!strategied && bot.hasTeleporter()) {
                 int oppIndex = -1;
-                if (supernovaPickup != null) {
-                    playerAction.heading = getHeadingBetween(supernovaPickup);
+                if (!supernovaPickup.isEmpty()) {
+                    playerAction.heading = getHeadingBetween(supernovaPickup.get(0));
                     playerAction.action = PlayerActions.FIRETELEPORT;
                     System.out.println("ACTION  : DEPLOY TELEPORTER TO SUPERNOVA");
                     strategied = true;
@@ -236,8 +236,8 @@ public class BotService {
             if (!strategied) {
                 Boolean foundValidTarget = false;
                 for (GameObject tele : teleporterList) {
-                    if (superNovaBomb != null) {
-                        if (getDistanceBetween(superNovaBomb, tele) < bot.getSize() * 1.1) {
+                    if (!supernovaBomb.isEmpty()) {
+                        if (getDistanceBetween(supernovaBomb.get(0), tele) < bot.getSize() * 1.1) {
                             playerAction.heading = getHeadingBetween(tele);
                             playerAction.action = PlayerActions.TELEPORT;
                             strategied = true;
